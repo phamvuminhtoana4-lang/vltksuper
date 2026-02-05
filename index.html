@@ -2,1020 +2,781 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VO LAM SUPREME: VẠN CỔ QUY TÔNG - MEGA VERSION</title>
-    <style>
-        /* ============================================================
-           PHẦN 1: HỆ THỐNG CSS ĐỒ SỘ (600+ DÒNG STYLE)
-           ============================================================ */
-        :root {
-            --gold: #FFD700; --gold-dark: #B8860B; --gold-light: #FFFACD;
-            --hp: #ff4757; --hp-dark: #c0392b;
-            --mp: #1e90ff; --mp-dark: #0984e3;
-            --exp: #2ed573; --exp-dark: #26de81;
-            --bg: #050505; --panel: rgba(15, 15, 15, 0.98);
-            --border-ui: 2px solid var(--gold);
-            --shadow-glow: 0 0 25px rgba(255, 215, 0, 0.3);
-            --font-main: 'Constantia', 'Georgia', serif;
-        }
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>VÕ LÂM SUPREME: VẠN CỔ QUY TÔNG</title>
+    
+    <style id="game-main-styles">
+        
+:root {
+    /* Bảng màu Ngũ Hành */
+    --gold-bright: #FFD700;
+    --gold-dark: #B8860B;
+    --gold-glow: rgba(255, 215, 0, 0.6);
+    --hp-color: #ff4d4d;
+    --mp-color: #3399ff;
+    --exp-color: #2ecc71;
+    --ele-kim: #ffffff; --ele-moc: #2ecc71; --ele-thuy: #3498db; --ele-hoa: #e74c3c; --ele-tho: #f1c40f;
+    
+    /* Cấu trúc vật lý */
+    --transition-fast: 0.15s ease;
+    --transition-slow: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    --glass: rgba(15, 15, 15, 0.85);
+}
 
-        * { 
-            box-sizing: border-box; 
-            -webkit-tap-highlight-color: transparent; 
-            user-select: none; 
-            margin: 0; padding: 0; 
-        }
+/* 1. RESET & NỀN TẢNG CƠ BẢN */
+* {
+    margin: 0; padding: 0; box-sizing: border-box;
+    user-select: none; -webkit-tap-highlight-color: transparent;
+}
 
-        body, html { 
-            width: 100%; height: 100%; 
-            overflow: hidden; 
-            background: #000; 
-            color: #eee; 
-            font-family: var(--font-main); 
-        }
+body, html {
+    width: 100%; height: 100%; overflow: hidden;
+    background: #000; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #fff;
+}
 
-        /* THẾ GIỚI 2.5D ENGINE */
-        #stage { 
-            position: relative; 
-            width: 100vw; height: 100vh; 
-            overflow: hidden; 
-            perspective: 1500px;
-        }
+/* 2. MÀN HÌNH KHỞI ĐỘNG (START SCREEN) */
+#start-screen {
+    position: fixed; inset: 0; z-index: 10000;
+    display: flex; align-items: center; justify-content: center;
+    background: radial-gradient(circle at center, #1a1a1a 0%, #000 100%);
+}
 
-        #map-container { 
-            position: absolute; 
-            width: 2000000px; height: 2000000px; 
-            background: 
-                radial-gradient(circle, #222 1.5px, transparent 1.5px),
-                linear-gradient(to right, #111 1px, transparent 1px),
-                linear-gradient(to bottom, #111 1px, transparent 1px);
-            background-size: 100px 100px, 1000px 1000px, 1000px 1000px;
-            will-change: transform;
-            image-rendering: pixelated;
-        }
+.vfx-nebula-bg {
+    position: absolute; width: 100%; height: 100%; overflow: hidden;
+}
 
-        /* LỚP THỰC THỂ (ENTITIES) */
-        .ent { 
-            position: absolute; 
-            width: 120px; height: 150px; 
-            z-index: 100; 
-            transition: opacity 0.4s;
-            transform-style: preserve-3d;
-        }
+.cloud-1, .cloud-2 {
+    position: absolute; width: 200%; height: 200%;
+    background: url('https://www.transparenttextures.com/patterns/clouds-dark.png');
+    opacity: 0.3; animation: drift 120s linear infinite;
+}
 
-        /* NHÂN VẬT & QUÁI VẬT */
-        .stick-man { 
-            position: relative; 
-            width: 100%; height: 100%; 
-            display: flex; flex-direction: column; align-items: center; 
-        }
+@keyframes drift { from { transform: translate(0,0); } to { transform: translate(-50%, -50%); } }
 
-        .head { 
-            width: 35px; height: 35px; 
-            border: 3px solid #fff; 
-            border-radius: 50%; 
-            background: #000; 
-            box-shadow: 0 0 10px rgba(255,255,255,0.5);
-            z-index: 5;
-        }
+.logo-text {
+    font-size: 4rem; font-weight: 900; letter-spacing: 15px;
+    background: linear-gradient(to bottom, var(--gold-bright), #fff, var(--gold-dark));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 15px var(--gold-glow));
+    animation: pulseLogo 3s infinite alternate ease-in-out;
+}
 
-        .body-line { 
-            width: 4px; height: 55px; 
-            background: #fff; 
-            margin-top: -2px; 
-            border-radius: 2px;
-        }
+@keyframes pulseLogo { from { transform: scale(1); filter: brightness(1); } to { transform: scale(1.05); filter: brightness(1.3); } }
 
-        .arm-l, .arm-r {
-            position: absolute; width: 3px; height: 35px;
-            background: #fff; top: 40px; transform-origin: top;
-        }
-        .arm-l { transform: rotate(30deg); left: 55px; }
-        .arm-r { transform: rotate(-30deg); right: 55px; }
+/* 3. CHỌN MÔN PHÁI (SECT SELECTION) */
+.sect-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; padding: 20px;
+}
 
-        .leg-l, .leg-r {
-            position: absolute; width: 3px; height: 40px;
-            background: #fff; bottom: 15px; transform-origin: top;
-        }
-        .leg-l { transform: rotate(15deg); left: 58px; }
-        .leg-r { transform: rotate(-15deg); right: 58px; }
+.sect-card {
+    background: var(--glass); border: 1px solid #333; border-radius: 10px;
+    padding: 15px; cursor: pointer; transition: var(--transition-slow);
+    position: relative; overflow: hidden;
+}
 
-        /* VŨ KHÍ SIÊU CẤP */
-        .weapon { 
-            position: absolute; 
-            width: 6px; height: 85px; 
-            background: linear-gradient(to bottom, var(--gold-light), var(--gold-dark)); 
-            top: 40px; left: 65px; 
-            transform-origin: top; 
-            display: none; 
-            filter: drop-shadow(0 0 8px var(--gold));
-            border-radius: 3px;
-        }
+.sect-card.active {
+    border-color: var(--gold-bright); transform: translateY(-5px);
+    box-shadow: 0 0 20px var(--gold-glow);
+}
 
-        /* HIỆU ỨNG CÁNH (WINGS) */
-        .wings-container {
-            position: absolute; width: 160px; height: 100px;
-            top: 20px; left: -20px; display: none; z-index: -1;
-        }
-        .wing {
-            position: absolute; width: 80px; height: 100px;
-            background: rgba(255, 215, 0, 0.4);
-            clip-path: polygon(0% 20%, 100% 0%, 80% 100%, 0% 80%);
-            animation: flap 0.6s infinite alternate ease-in-out;
-        }
-        .wing.right { right: 0; transform: scaleX(-1); }
-        @keyframes flap { from { transform: rotate(-15deg); } to { transform: rotate(25deg); } }
+.sect-card::after {
+    content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+    background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+    transform: rotate(45deg); transition: 0.5s;
+}
 
-        /* GIAO DIỆN HUD (HEADS-UP DISPLAY) */
-        #ui-layer { position: fixed; inset: 0; pointer-events: none; z-index: 2000; }
-        .pointer { pointer-events: auto; }
+.sect-card:hover::after { left: 100%; }
 
-        #hud-top-left {
-            position: fixed; top: 25px; left: 25px;
-            width: 380px; padding: 20px;
-            background: var(--panel);
-            border-left: 6px solid var(--gold);
-            border-radius: 5px;
-            box-shadow: var(--shadow-glow);
-        }
+/* 4. CHIẾN TRƯỜNG TỔNG THỂ (WORLD MAP) */
+#map-viewport {
+    width: 100vw; height: 100vh; overflow: hidden; position: relative;
+}
 
-        .bar-container {
-            width: 100%; height: 22px;
-            background: #111; border: 1px solid #444;
-            border-radius: 11px; margin: 10px 0;
-            overflow: hidden; position: relative;
-        }
-        .bar-fill { height: 100%; transition: width 0.4s cubic-bezier(0.17, 0.67, 0.83, 0.67); }
-        .bar-label {
-            position: absolute; width: 100%; text-align: center;
-            font-size: 11px; font-weight: 900; line-height: 22px;
-            color: #fff; text-shadow: 1px 1px 2px #000;
-        }
+#map-container {
+    width: 2000000px; height: 2000000px; background: #0b110b;
+    transform-origin: 0 0; will-change: transform;
+}
 
-        /* MINI MAP PRO */
-        #mini-map-container {
-            position: fixed; top: 25px; right: 25px;
-            width: 220px; height: 220px;
-            background: rgba(0,0,0,0.85);
-            border: 3px solid var(--gold);
-            border-radius: 50%;
-            overflow: hidden;
-            box-shadow: 0 0 20px rgba(0,0,0,1);
-        }
-        #map-radar { position: absolute; width: 100%; height: 100%; }
-        .radar-line {
-            position: absolute; width: 50%; height: 2px;
-            background: linear-gradient(to right, transparent, var(--gold));
-            top: 50%; left: 50%; transform-origin: left;
-            animation: radar-sweep 4s linear infinite;
-        }
-        @keyframes radar-sweep { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.ground-texture-mesh {
+    width: 100%; height: 100%;
+    background-image: 
+        radial-gradient(circle at 2px 2px, rgba(255,255,255,0.03) 1px, transparent 0);
+    background-size: 100px 100px;
+}
 
-        /* MENU TRƯỢT NÂNG CAO */
-        #btn-toggle-menu {
-            position: fixed; right: 0; top: 50%; transform: translateY(-50%);
-            width: 50px; height: 200px;
-            background: var(--gold); color: #000;
-            border: none; border-radius: 20px 0 0 20px;
-            cursor: pointer; font-weight: 900;
-            writing-mode: vertical-rl; text-align: center;
-            font-size: 16px; letter-spacing: 2px;
-            box-shadow: -5px 0 15px rgba(0,0,0,0.5);
-        }
+/* 5. CẤU TRÚC XƯƠNG NHÂN VẬT (CHARACTER RIGGING) */
+.entity-base {
+    position: absolute; width: 80px; height: 100px;
+    z-index: 100; transition: transform 0.1s linear;
+}
 
-        #side-panel {
-            position: fixed; top: 0; right: -450px;
-            width: 430px; height: 100vh;
-            background: var(--panel);
-            border-left: 4px solid var(--gold);
-            transition: 0.6s cubic-bezier(0.075, 0.82, 0.165, 1);
-            padding: 40px 25px;
-            overflow-y: auto;
-        }
-        #side-panel.open { right: 0; }
+.rig-skeleton {
+    position: relative; width: 100%; height: 100%;
+    display: flex; flex-direction: column; align-items: center;
+}
 
-        /* HỆ THỐNG SKILL DOCK */
-        .skill-dock {
-            position: fixed; bottom: 35px; right: 35px;
-            display: grid; grid-template-columns: repeat(4, 95px);
-            gap: 15px;
-        }
-        .skill-slot {
-            width: 95px; height: 95px;
-            background: radial-gradient(circle, #333, #050505);
-            border: 2px solid #555; border-radius: 15px;
-            display: flex; flex-direction: column;
-            align-items: center; justify-content: center;
-            cursor: pointer; position: relative; overflow: hidden;
-        }
-        .skill-slot:hover { border-color: var(--gold); background: #111; }
-        .skill-name { font-size: 11px; font-weight: bold; text-align: center; margin-top: 5px; color: var(--gold); }
-        .cooldown-overlay {
-            position: absolute; bottom: 0; width: 100%; height: 0%;
-            background: rgba(0,0,0,0.7); transition: height 0.1s linear;
-        }
+.rig-head {
+    width: 28px; height: 28px; border: 2.5px solid #fff; border-radius: 50%;
+    background: #111; z-index: 10;
+}
 
-        /* HỘI THOẠI & LOG */
-        #dialogue-system {
-            position: fixed; bottom: 120px; left: 50%; transform: translateX(-50%);
-            width: 750px; background: var(--panel);
-            border: 2px solid var(--gold); border-radius: 15px;
-            padding: 30px; display: none; box-shadow: 0 0 50px #000;
-        }
+.eye-glow-vfx {
+    position: absolute; top: 8px; width: 100%; display: flex; justify-content: space-around;
+}
 
-        #game-event-log {
-            position: fixed; bottom: 40px; left: 40px;
-            width: 450px; height: 200px;
-            background: rgba(0,0,0,0.4);
-            padding: 15px; font-size: 13px;
-            overflow: hidden; pointer-events: none;
-            display: flex; flex-direction: column-reverse;
-        }
+.eye-glow-vfx::before, .eye-glow-vfx::after {
+    content: ''; width: 4px; height: 4px; background: #0ff; border-radius: 50%; box-shadow: 0 0 8px #0ff;
+}
 
-        /* HIỆU ỨNG CHIẾN ĐẤU */
-        .damage-pop {
-            position: absolute; color: #ff4757;
-            font-size: 32px; font-weight: 900;
-            text-shadow: 2px 2px #000;
-            animation: dmg-float 1.2s forwards;
-            pointer-events: none; z-index: 999;
-        }
-        @keyframes dmg-float {
-            0% { transform: translateY(0) scale(0.5); opacity: 0; }
-            20% { transform: translateY(-40px) scale(1.2); opacity: 1; }
-            100% { transform: translateY(-120px) scale(1); opacity: 0; }
-        }
+.rig-torso {
+    width: 6px; height: 45px; background: #fff; border-radius: 3px; position: relative;
+}
 
-        /* CHỌN PHÁI (MÀN HÌNH KHỞI TẠO) */
-        #start-screen {
-            position: fixed; inset: 0;
-            background: radial-gradient(circle, #1a1a1a, #000);
-            z-index: 9999; display: flex; flex-direction: column;
-            align-items: center; justify-content: center;
-        }
+.rig-arm {
+    position: absolute; width: 4px; height: 35px; background: #fff;
+    transform-origin: top; top: 2px; border-radius: 2px;
+}
+
+.arm-l { left: -4px; transform: rotate(15deg); }
+.arm-r { right: -4px; transform: rotate(-15deg); }
+
+.rig-leg {
+    position: absolute; width: 4px; height: 40px; background: #fff;
+    transform-origin: top; bottom: -38px; border-radius: 2px;
+}
+
+.leg-l { left: 0; transform: rotate(10deg); }
+.leg-r { right: 2px; transform: rotate(-10deg); }
+
+/* VŨ KHÍ (WEAPON) */
+.weapon-instance {
+    position: absolute; bottom: -20px; right: -5px;
+    width: 5px; height: 75px; background: linear-gradient(to top, #fff, var(--gold-bright));
+    transform-origin: top; box-shadow: 0 0 10px var(--gold-glow);
+    animation: weaponIdle 2s infinite ease-in-out;
+}
+
+@keyframes weaponIdle { 0%, 100% { transform: rotate(-5deg); } 50% { transform: rotate(5deg); } }
+
+/* 6. GIAO DIỆN NGƯỜI DÙNG (HUD UI) */
+.hud-player-vitals {
+    position: fixed; top: 15px; left: 15px; z-index: 9000;
+    display: flex; align-items: center; background: var(--glass);
+    padding: 8px 20px 8px 8px; border-radius: 50px 15px 15px 50px;
+    border: 1px solid var(--gold-dark); box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+}
+
+.portrait-box {
+    width: 65px; height: 65px; border-radius: 50%; border: 3px solid var(--gold-bright);
+    background: #222; overflow: hidden; position: relative;
+}
+
+.bar-unit {
+    width: 180px; height: 18px; background: #000; border-radius: 9px;
+    margin: 4px 0; position: relative; overflow: hidden; border: 1px solid #333;
+}
+
+.bar-unit.hp .fill { background: linear-gradient(90deg, #900, var(--hp-color)); }
+.bar-unit.mp .fill { background: linear-gradient(90deg, #005, var(--mp-color)); }
+.fill { height: 100%; width: 100%; transition: width 0.3s ease; }
+
+.value-text {
+    position: absolute; width: 100%; text-align: center; font-size: 10px;
+    font-weight: bold; line-height: 18px; text-shadow: 1px 1px #000;
+}
+
+/* 7. MOBILE CONTROLLER */
+#joystick-wrapper {
+    position: absolute; bottom: 50px; left: 50px;
+    width: 160px; height: 160px; background: rgba(255,255,255,0.05);
+    border-radius: 50%; border: 2px solid rgba(255,215,0,0.2);
+}
+
+#joystick-knob {
+    position: absolute; top: 50%; left: 50%; width: 70px; height: 70px;
+    background: radial-gradient(circle, var(--gold-bright), var(--gold-dark));
+    border-radius: 50%; transform: translate(-50%, -50%);
+    box-shadow: 0 0 20px rgba(0,0,0,0.8);
+}
+
+#skill-pad-cluster {
+    position: absolute; bottom: 30px; right: 30px; width: 300px; height: 300px;
+}
+
+#btn-attack-trigger {
+    position: absolute; bottom: 10px; right: 10px; width: 100px; height: 100px;
+    background: radial-gradient(circle, #ff4757, #8e0000);
+    border: 4px solid var(--gold-bright); border-radius: 50%;
+    font-size: 40px; box-shadow: 0 0 25px rgba(255,0,0,0.4);
+}
+
+.s-btn {
+    position: absolute; width: 65px; height: 65px; background: rgba(20,20,20,0.9);
+    border: 2px solid var(--gold-bright); border-radius: 50%; color: #fff;
+    font-weight: bold; overflow: hidden;
+}
+
+.s1 { bottom: 130px; right: 10px; }
+.s2 { bottom: 120px; right: 100px; }
+.s3 { bottom: 30px; right: 130px; }
+.s4 { bottom: 200px; right: 40px; } /* Ult */
+
+.cd-mask {
+    position: absolute; bottom: 0; width: 100%; height: 0%;
+    background: rgba(0,0,0,0.7); transition: height 0.1s linear;
+}
+
+/* 8. HỆ THỐNG MODAL (POPUPS) */
+.modal-window-supreme {
+    width: 90%; max-width: 550px; background: #111;
+    border: 2px solid var(--gold-dark); border-radius: 15px;
+    animation: modalIn 0.3s var(--transition-slow);
+}
+
+@keyframes modalIn { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
+
+.modal-header {
+    padding: 15px; border-bottom: 1px solid #333;
+    background: linear-gradient(to bottom, #222, #111);
+    display: flex; justify-content: space-between; align-items: center;
+}
+
+/* HIỆU ỨNG THỜI TIẾT DYNAMIC */
+.weather-overlay-rain {
+    position: absolute; inset: 0; pointer-events: none;
+    background: url('https://www.transparenttextures.com/patterns/stardust.png');
+    opacity: 0.1; animation: rain 0.5s linear infinite;
+}
+
+@keyframes rain { from { background-position: 0 0; } to { background-position: 200px 500px; } }
+
+/* CHỮ SÁT THƯƠNG (DAMAGE POPUP) */
+.dmg-text {
+    position: absolute; color: #ff0; font-weight: 900; font-size: 24px;
+    pointer-events: none; animation: flyUp 0.8s ease-out forwards;
+    text-shadow: 2px 2px #000;
+}
+
+@keyframes flyUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-100px); } }
+
+    
     </style>
 </head>
-<body>
+<body oncontextmenu="return false;">
 
-<div id="start-screen">
-    <h1 style="color:var(--gold); font-size: 60px; letter-spacing: 20px; text-shadow: 0 0 30px gold;">VÕ LÂM SUPREME</h1>
-    <p style="color:#888; margin-bottom: 50px; letter-spacing: 5px;">HÀNH TRÌNH VẠN CỔ - ĐỘC TÔN KIẾM ĐẠO</p>
-    
-    <div style="display:flex; gap:30px;">
-        <div class="pointer" onclick="Engine.init('THIEU_LAM')" style="width:300px; padding:40px; background:#111; border:2px solid #333; border-radius:20px; text-align:center; cursor:pointer; transition:0.3s;">
-            <h2 style="color:#f1c40f">THIẾU LÂM</h2>
-            <hr style="margin:15px 0; border:0; border-top:1px solid #333">
-            <p style="text-align:left; font-size:14px; line-height:2">
-                <span style="color:var(--exp)">● Sinh lực cực đại: +2500</span><br>
-                <span style="color:var(--exp)">● Phòng ngự ngoại gia: +150</span><br>
-                <span style="color:var(--hp)">● Tốc độ di chuyển: -4</span><br>
-                <span style="color:var(--hp)">● Sát thương cơ bản: -20%</span>
-            </p>
+    <div id="start-screen">
+        <div class="vfx-nebula-bg">
+            <div class="cloud-1"></div>
+            <div class="cloud-2"></div>
+            <div class="particle-system"></div>
         </div>
-        </div>
-</div>
 
-<div id="stage">
-    <div id="map-container">
-        <div id="layer-ground"></div>
-        <div id="layer-entities"></div>
-        <div id="layer-vfx"></div>
+        <div class="selection-ui">
+            <header class="game-logo-container">
+                <h1 class="logo-text" data-text="VÕ LÂM SUPREME">VÕ LÂM SUPREME</h1>
+                <div class="sub-title-decoration">KIẾM HIỆP TÌNH DUYÊN - VẠN CỔ TRƯỜNG TỒN</div>
+                <div class="divider-gold"></div>
+            </header>
 
-        <div id="hero" class="ent">
-            <div class="wings-container" id="hero-wings">
-                <div class="wing left"></div>
-                <div class="wing right"></div>
+            <div class="server-node-list">
+                <div class="server-box active">
+                    <span class="status-pulse"></span>
+                    <span class="sv-name">MÁY CHỦ 1: THÁI SƠN BẮC ĐẨU</span>
+                    <span class="sv-ping">Ping: 12ms</span>
+                </div>
             </div>
-            <div class="name-tag" id="hero-name" style="color:var(--gold)">Vô Danh Hiệp</div>
-            <div class="hp-bar-mini"><div id="hero-hp-bar" class="hp-fill-mini"></div></div>
-            <div class="stick-man">
-                <div class="head" id="hero-head"></div>
-                <div class="body-line"></div>
-                <div class="arm-l"></div><div class="arm-r"></div>
-                <div class="leg-l"></div><div class="leg-r"></div>
-                <div class="weapon" id="hero-weapon"></div>
-            </div>
-        </div>
-    </div>
-</div>
 
-<div id="ui-layer">
-    <div id="hud-top-left" class="pointer">
-        <div style="display:flex; justify-content:space-between; align-items:flex-end">
-            <h2 id="ui-sect-name" style="color:var(--gold)">VÔ PHÁI</h2>
-            <span id="ui-level" style="font-weight:900; font-size:20px">Cấp 1</span>
-        </div>
-        <div class="bar-container">
-            <div id="fill-hp" class="bar-fill" style="background:linear-gradient(to right, var(--hp-dark), var(--hp)); width:100%"></div>
-            <div class="bar-label">SINH LỰC: <span id="txt-hp">1000/1000</span></div>
-        </div>
-        <div class="bar-container">
-            <div id="fill-mp" class="bar-fill" style="background:linear-gradient(to right, var(--mp-dark), var(--mp)); width:100%"></div>
-            <div class="bar-label">NỘI LỰC: <span id="txt-mp">500/500</span></div>
-        </div>
-        <div class="bar-container" style="height:8px; margin-top:5px;">
-            <div id="fill-exp" class="bar-fill" style="background:var(--exp); width:0%"></div>
-        </div>
-        <div style="margin-top:10px; display:flex; gap:20px; font-size:14px">
-            <span>💰 Bạc: <b id="ui-money" style="color:var(--gold)">0</b></span>
-            <span>⚔️ Công lực: <b id="ui-atk" style="color:var(--hp)">100</b></span>
-        </div>
-    </div>
-
-    <div id="mini-map-container">
-        <div id="map-radar"></div>
-        <div class="radar-line"></div>
-        <div class="map-dot" style="top:50%; left:50%; background:#fff; width:8px; height:8px; z-index:10; box-shadow:0 0 5px #fff"></div>
-    </div>
-
-    <div class="skill-dock pointer" id="skill-dock">
-        </div>
-
-    <button id="btn-toggle-menu" class="pointer" onclick="UI.toggleMenu()">HÀNH TRANG & CHI SỐ</button>
-    <div id="side-panel" class="pointer">
-        <h1 style="color:var(--gold); border-bottom:2px solid #333; padding-bottom:10px">TRẠNG THÁI</h1>
-        <div id="full-stats-list" style="margin:20px 0; font-size:16px; line-height:2.5">
-            </div>
-        <hr style="border:0; border-top:1px solid #333; margin:20px 0">
-        <h2 style="color:var(--gold)">PHÁP BẢO</h2>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:20px">
-            <button onclick="Engine.toggleWings()" style="padding:15px; cursor:pointer; background:#222; color:#fff; border:1px solid var(--gold)">THẦN DỰC (BAY)</button>
-            <button onclick="Engine.toggleMount()" style="padding:15px; cursor:pointer; background:#222; color:#fff; border:1px solid var(--gold)">LINH THÚ (CƯỠI)</button>
-        </div>
-    </div>
-
-    <div id="dialogue-system" class="pointer">
-        <h2 id="npc-display-name" style="color:var(--gold)">Lão Nhân AI</h2>
-        <p id="npc-display-msg" style="margin:20px 0; font-size:18px; line-height:1.6"></p>
-        <div id="npc-display-options" style="display:flex; gap:15px"></div>
-        <button onclick="UI.closeDialogue()" style="margin-top:25px; background:none; border:none; color:#666; cursor:pointer">Lần sau quay lại...</button>
-    </div>
-
-    <div id="game-event-log"></div>
-</div>
-
-<script>
-    /**
-     * PHẦN 2: HỆ THỐNG LOGIC SIÊU CẤP (CORE ENGINE)
-     * Dòng code được viết tường minh, không thu gọn.
-     */
-
-    const State = {
-        player: {
-            x: 1000000, y: 1000000,
-            lv: 1, exp: 0, 
-            hp: 1000, maxHp: 1000,
-            mp: 500, maxMp: 500,
-            atk: 100, def: 50, spd: 12,
-            money: 1000,
-            sect: null,
-            isFlying: false,
-            isMounted: false,
-            baseSpd: 12
-        },
-        world: {
-            mobs: [],
-            npcs: [],
-            bosses: [],
-            items: []
-        },
-        input: {
-            keys: {},
-            mouse: { x: 0, y: 0 }
-        },
-        settings: {
-            mapScale: 0.04,
-            isRunning: false
-        }
-    };
-
-    const SECT_DATA = {
-        THIEU_LAM: {
-            name: "Thiếu Lâm Tự",
-            color: "#f1c40f",
-            bonus: { hp: 2500, def: 150, spd: -4, atkMul: 0.8 },
-            skills: [
-                { id: 'tl1', n: "La Hán Quyền", dmg: 1.5, mp: 20, cd: 1000 },
-                { id: 'tl2', n: "Niêm Hoa Chỉ", dmg: 2.8, mp: 50, cd: 3000 },
-                { id: 'tl3', n: "Sư Tử Hống", dmg: 4.5, mp: 120, cd: 8000 },
-                { id: 'tl4', n: "Dịch Cân Kinh", dmg: 0, mp: 200, cd: 20000 }
-            ]
-        },
-  
-         const Engine = {
-        // --- 1. KHỞI TẠO HỆ THỐNG ---
-        init(sectKey) {
-            const data = SECT_DATA[sectKey];
-            if (!data) return;
-
-            // Thiết lập môn phái và cộng chỉ số chi tiết
-            State.player.sect = data;
-            State.player.maxHp += data.bonus.hp;
-            State.player.hp = State.player.maxHp;
-            State.player.def += data.bonus.def;
-            State.player.baseSpd += data.bonus.spd;
-            State.player.spd = State.player.baseSpd;
-            
-            // Cập nhật giao diện ban đầu
-            document.getElementById('start-screen').style.display = 'none';
-            document.getElementById('ui-sect-name').innerText = data.name;
-            document.getElementById('ui-sect-name').style.color = data.color;
-            document.getElementById('hero-head').style.borderColor = data.color;
-            document.getElementById('hero-name').innerText = "Thiếu Hiệp " + data.name;
-
-            // Khởi tạo danh sách kỹ năng lên Dock
-            this.setupSkills(data.skills);
-
-            // Khởi tạo thực thể thế giới (Quái, NPC, Boss)
-            this.spawnWorldEntities();
-
-            // Kích hoạt vòng lặp game
-            State.settings.isRunning = true;
-            this.gameLoop();
-            
-            UI.addLog("HỆ THỐNG", "Chào mừng bạn gia nhập " + data.name + ". Hãy dùng W-A-S-D để hành tẩu!");
-        },
-
-        setupSkills(skills) {
-            const dock = document.getElementById('skill-dock');
-            dock.innerHTML = ''; // Xóa sạch dock cũ
-            
-            skills.forEach((skill, index) => {
-                const slot = document.createElement('div');
-                slot.className = 'skill-slot pointer';
-                slot.innerHTML = `
-                    <div class="cooldown-overlay" id="cd-${skill.id}"></div>
-                    <div style="font-size: 20px;">${index + 1}</div>
-                    <div class="skill-name">${skill.n}</div>
-                `;
-                slot.onclick = () => this.castSkill(skill);
-                dock.appendChild(slot);
-            });
-
-            // Thêm phím đánh thường mặc định
-            const attackSlot = document.createElement('div');
-            attackSlot.className = 'skill-slot pointer';
-            attackSlot.style.border = "2px solid #ff4757";
-            attackSlot.innerHTML = `<div>SPACE</div><div class="skill-name">ĐÁNH THƯỜNG</div>`;
-            attackSlot.onclick = () => this.performBasicAttack();
-            dock.appendChild(attackSlot);
-        },
-
-        // --- 2. QUẢN LÝ THỰC THỂ (ENTITIES) ---
-        spawnWorldEntities() {
-            // Tạo 100 quái vật dã nhân xung quanh tọa độ người chơi
-            for (let i = 0; i < 100; i++) {
-                const mobX = State.player.x + (Math.random() - 0.5) * 4000;
-                const mobY = State.player.y + (Math.random() - 0.5) * 4000;
-                const mob = new Entity('mob-' + i, 'Dã Nhân Cấp ' + (i%10 + 1), mobX, mobY, 600, 'mob');
-                State.world.mobs.push(mob);
-            }
-
-            // Tạo NPC AI tại các điểm cố định
-            const npc1 = new Entity('npc-static-1', 'Lão Già Quét Rác', State.player.x + 400, State.player.y - 300, 99999, 'npc');
-            State.world.npcs.push(npc1);
-
-            const npc2 = new Entity('npc-static-2', 'Chưởng Môn Tiếp Dẫn', State.player.x - 500, State.player.y + 600, 99999, 'npc');
-            State.world.npcs.push(npc2);
-
-            // Tạo Boss Thế Giới
-            const boss = new Entity('boss-world-1', 'HỎA KỲ LÂN VẠN CỔ', 1002000, 1002000, 50000, 'mob');
-            State.world.bosses.push(boss);
-        },
-
-        // --- 3. TOÁN HỌC DI CHUYỂN & VA CHẠM ---
-        updatePhysics() {
-            if (!State.settings.isRunning) return;
-
-            let moveX = 0;
-            let moveY = 0;
-
-            // Kiểm tra phím bấm để xác định vector di chuyển
-            if (State.input.keys['w'] || State.input.keys['arrowup']) moveY -= 1;
-            if (State.input.keys['s'] || State.input.keys['arrowdown']) moveY += 1;
-            if (State.input.keys['a'] || State.input.keys['arrowleft']) moveX -= 1;
-            if (State.input.keys['d'] || State.input.keys['arrowright']) moveX += 1;
-
-            // Chuẩn hóa vector di chuyển (để đi chéo không bị nhanh hơn đi thẳng)
-            if (moveX !== 0 || moveY !== 0) {
-                const length = Math.sqrt(moveX * moveX + moveY * moveY);
-                moveX /= length;
-                moveY /= length;
-
-                State.player.x += moveX * State.player.spd;
-                State.player.y += moveY * State.player.spd;
+            <section class="sect-mega-selection">
+                <div class="sect-header">
+                    <span class="border-line"></span>
+                    <h2 class="sect-title">THỈNH CHỌN MÔN PHÁI</h2>
+                    <span class="border-line"></span>
+                </div>
                 
-                // Hiệu ứng nghiêng nhân vật khi di chuyển
-                const heroEl = document.getElementById('hero');
-                heroEl.style.transform = `rotate(${moveX * 10}deg)`;
-            }
+                <div class="sect-grid-scroll">
+                    <div class="sect-grid" id="sect-picker">
+                        </div>
+                </div>
 
-            // Cập nhật vị trí Camera (Map trượt ngược lại)
-            const mapContainer = document.getElementById('map-container');
-            const camX = window.innerWidth / 2 - State.player.x;
-            const camY = window.innerHeight / 2 - State.player.y;
-            mapContainer.style.transform = `translate(${camX}px, ${camY}px)`;
+                <div id="sect-preview-box" class="preview-card">
+                    <div class="preview-body">
+                        <div class="preview-visual">
+                            <div class="skeleton-preview-rig"></div>
+                        </div>
+                        <div class="preview-stats">
+                            <h3 id="pre-name">HỆ THỐNG</h3>
+                            <div class="stat-group">
+                                <div class="stat-label">Căn Cốt: <div class="bar-outer"><div id="pre-hp" class="bar-inner"></div></div></div>
+                                <div class="stat-label">Nội Công: <div class="bar-outer"><div id="pre-mp" class="bar-inner"></div></div></div>
+                                <div class="stat-label">Thân Pháp: <div class="bar-outer"><div id="pre-spd" class="bar-inner"></div></div></div>
+                            </div>
+                            <div class="sect-element-tag" id="pre-element">Ngũ Hành: ???</div>
+                            <p id="pre-desc">Vui lòng chọn môn phái để xem tuyệt học...</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
 
-            // Cập nhật vị trí Hero trên Map thực tế
-            const hero = document.getElementById('hero');
-            hero.style.left = State.player.x + 'px';
-            hero.style.top = State.player.y + 'px';
-        },
+            <footer class="start-footer">
+                <div class="character-input-zone">
+                    <input type="text" id="player-name-input" maxlength="10" placeholder="Danh tính đại hiệp...">
+                    <button id="btn-random-name">🎲</button>
+                </div>
+                <button id="btn-enter-game" class="btn-start-hero">XUẤT THẾ GIANG HỒ</button>
+                <div id="boot-loader" class="hidden">
+                    <div class="loader-vfx"></div>
+                    <div class="loader-status">Đang nạp khí hóa thần (0%)...</div>
+                </div>
+            </footer>
+        </div>
+    </div>
 
-        // --- 4. HỆ THỐNG AI TỰ ĐỘNG ---
-        updateAI() {
-            // NPC di chuyển ngẫu nhiên (Tuần tra)
-            State.world.npcs.forEach(npc => {
-                if (!npc.nextAction || Date.now() > npc.nextAction) {
-                    npc.vx = (Math.random() - 0.5) * 2;
-                    npc.vy = (Math.random() - 0.5) * 2;
-                    npc.nextAction = Date.now() + 2000 + Math.random() * 3000;
-                }
-                npc.x += npc.vx;
-                npc.y += npc.vy;
-                const el = document.getElementById(npc.id);
-                if (el) {
-                    el.style.left = npc.x + 'px';
-                    el.style.top = npc.y + 'px';
-                }
-            });
-
-            // Quái vật đuổi theo người chơi nếu lại gần (Aggro)
-            State.world.mobs.forEach(mob => {
-                const dist = Math.hypot(State.player.x - mob.x, State.player.y - mob.y);
-                if (dist < 400 && dist > 50) {
-                    const angle = Math.atan2(State.player.y - mob.y, State.player.x - mob.x);
-                    mob.x += Math.cos(angle) * 3;
-                    mob.y += Math.sin(angle) * 3;
-                }
-                const el = document.getElementById(mob.id);
-                if (el) {
-                    el.style.left = mob.x + 'px';
-                    el.style.top = mob.y + 'px';
-                }
-            });
-        },
-
-        // --- 5. HỆ THỐNG CHIẾN ĐẤU CHI TIẾT ---
-        performBasicAttack() {
-            const weapon = document.getElementById('hero-weapon');
-            weapon.style.display = 'block';
-            weapon.style.animation = 'swing 0.2s ease-in-out';
-            
-            // Kiểm tra va chạm với quái
-            [...State.world.mobs, ...State.world.bosses].forEach(target => {
-                const dist = Math.hypot(State.player.x - target.x, State.player.y - target.y);
-                if (dist < 150) {
-                    this.calculateDamage(State.player, target, 1.0);
-                }
-            });
-
-            setTimeout(() => {
-                weapon.style.display = 'none';
-                weapon.style.animation = '';
-            }, 200);
-        },
-
-        calculateDamage(attacker, victim, multiplier) {
-            // Công thức sát thương: (Công * Hệ số) - (Thủ / 2)
-            let dmg = (State.player.atk * multiplier) - (victim.type === 'npc' ? 999 : 20);
-            dmg = Math.max(Math.floor(dmg + Math.random() * 10), 1);
-
-            victim.hp -= dmg;
-            UI.createDamagePop(victim.x, victim.y, dmg);
-            
-            // Cập nhật thanh máu thực thể
-            const hpBar = document.getElementById(victim.id + '-h');
-            if (hpBar) {
-                const pct = Math.max(0, (victim.hp / victim.maxHp) * 100);
-                hpBar.style.width = pct + '%';
-            }
-
-            // Kiểm tra tử vong
-            if (victim.hp <= 0) {
-                this.onEntityDeath(victim);
-            }
-        },
-
-        onEntityDeath(victim) {
-            UI.addLog("CHIẾN ĐẤU", "Đã hạ gục " + victim.name);
-            State.player.exp += 500;
-            State.player.money += 150;
-            
-            // Hiệu ứng tan biến
-            const el = document.getElementById(victim.id);
-            if (el) el.style.opacity = '0';
-            
-            // Hồi sinh sau 5 giây tại vị trí ngẫu nhiên
-            setTimeout(() => {
-                victim.hp = victim.maxHp;
-                victim.x = State.player.x + (Math.random() - 0.5) * 3000;
-                victim.y = State.player.y + (Math.random() - 0.5) * 3000;
-                if (el) {
-                    el.style.left = victim.x + 'px';
-                    el.style.top = victim.y + 'px';
-                    el.style.opacity = '1';
-                    document.getElementById(victim.id + '-h').style.width = '100%';
-                }
-            }, 5000);
-
-            this.checkLevelUp();
-            UI.update();
-        },
-
-        checkLevelUp() {
-            const reqExp = State.player.lv * 2000;
-            if (State.player.exp >= reqExp) {
-                State.player.lv++;
-                State.player.exp = 0;
-                State.player.maxHp += 500;
-                State.player.hp = State.player.maxHp;
-                State.player.atk += 40;
-                UI.addLog("THĂNG CẤP", "Chúc mừng! Bạn đã đạt Cấp " + State.player.lv);
-            }
-        },
-
-        // --- 6. HỆ THỐNG PHÁP BẢO (BAY & CƯỠI) ---
-        toggleWings() {
-            State.player.isFlying = !State.player.isFlying;
-            const wingEl = document.getElementById('hero-wings');
-            if (State.player.isFlying) {
-                wingEl.style.display = 'block';
-                State.player.spd = State.player.baseSpd + 10;
-                UI.addLog("PHÁP BẢO", "Đã kích hoạt Vô Thượng Thần Dực!");
-            } else {
-                wingEl.style.display = 'none';
-                State.player.spd = State.player.isMounted ? State.player.baseSpd * 2 : State.player.baseSpd;
-                UI.addLog("PHÁP BẢO", "Đã thu hồi cánh.");
-            }
-        },
-
-        toggleMount() {
-            State.player.isMounted = !State.player.isMounted;
-            if (State.player.isMounted) {
-                State.player.spd = State.player.baseSpd * 2.2;
-                document.getElementById('hero').style.marginTop = "-20px";
-                UI.addLog("LINH THÚ", "Đã cưỡi Hắc Long Mã!");
-            } else {
-                State.player.spd = State.player.baseSpd;
-                document.getElementById('hero').style.marginTop = "0px";
-                UI.addLog("LINH THÚ", "Đã xuống ngựa.");
-            }
-        },
-
-        // --- VÒNG LẶP CHÍNH (GAME LOOP) ---
-        gameLoop() {
-            if (!State.settings.isRunning) return;
-
-            this.updatePhysics();
-            this.updateAI();
-            UI.updateMiniMap();
-            
-            // Hồi phục nội lực tự động
-            if (Date.now() % 100 === 0) {
-                if (State.player.mp < State.player.maxMp) State.player.mp += 1;
-                UI.update();
-            }
-
-            requestAnimationFrame(() => this.gameLoop());
-        }
-    };
-
-    /** ============================================================
-     * PHẦN 3: HỆ THỐNG UI & ĐIỀU KHIỂN CHI TIẾT
-     * ============================================================
-     */
-    const UI = {
-        toggleMenu() {
-            const panel = document.getElementById('side-panel');
-            panel.classList.toggle('open');
-            this.update();
-        },
-
-        update() {
-            // Cập nhật thanh máu/nội lực
-            const hpPct = (State.player.hp / State.player.maxHp) * 100;
-            const mpPct = (State.player.mp / State.player.maxMp) * 100;
-            const expPct = (State.player.exp / (State.player.lv * 2000)) * 100;
-
-            document.getElementById('fill-hp').style.width = hpPct + '%';
-            document.getElementById('fill-mp').style.width = mpPct + '%';
-            document.getElementById('fill-exp').style.width = expPct + '%';
-            
-            document.getElementById('txt-hp').innerText = `${Math.floor(State.player.hp)} / ${State.player.maxHp}`;
-            document.getElementById('txt-mp').innerText = `${Math.floor(State.player.mp)} / ${State.player.maxMp}`;
-            document.getElementById('ui-level').innerText = `Cấp ${State.player.lv}`;
-            document.getElementById('ui-money').innerText = State.player.money;
-            document.getElementById('ui-atk').innerText = State.player.atk;
-
-            // Cập nhật bảng chỉ số chi tiết trong Menu
-            document.getElementById('full-stats-list').innerHTML = `
-                <div style="display:flex; justify-content:space-between"><span>⚔️ Tấn công:</span> <b style="color:var(--hp)">${State.player.atk}</b></div>
-                <div style="display:flex; justify-content:space-between"><span>🛡️ Phòng ngự:</span> <b style="color:var(--mp)">${State.player.def}</b></div>
-                <div style="display:flex; justify-content:space-between"><span>⚡ Tốc độ:</span> <b style="color:var(--exp)">${State.player.spd.toFixed(1)}</b></div>
-                <div style="display:flex; justify-content:space-between"><span>📍 Tọa độ X:</span> <b>${Math.floor(State.player.x)}</b></div>
-                <div style="display:flex; justify-content:space-between"><span>📍 Tọa độ Y:</span> <b>${Math.floor(State.player.y)}</b></div>
-            `;
-        },
-
-        updateMiniMap() {
-            const radar = document.getElementById('map-radar');
-            radar.innerHTML = '';
-            const scale = State.settings.mapScale;
-            const centerX = 110; // 220px / 2
-            const centerY = 110;
-
-            // Vẽ các thực thể lên Map
-            [...State.world.npcs, ...State.world.mobs, ...State.world.bosses].forEach(ent => {
-                const relX = (ent.x - State.player.x) * scale;
-                const relY = (ent.y - State.player.y) * scale;
-
-                // Chỉ vẽ nếu nằm trong vòng tròn radar (R=110)
-                if (Math.hypot(relX, relY) < 105) {
-                    let dotClass = 'dot-mob';
-                    if (ent.type === 'npc') dotClass = 'dot-npc';
-                    if (ent.id.includes('boss')) dotClass = 'dot-boss';
-
-                    const dot = document.createElement('div');
-                    dot.className = 'map-dot ' + dotClass;
-                    dot.style.left = (centerX + relX) + 'px';
-                    dot.style.top = (centerY + relY) + 'px';
-                    radar.appendChild(dot);
-                }
-            });
-        },
-
-        createDamagePop(x, y, dmg) {
-            const pop = document.createElement('div');
-            pop.className = 'damage-pop';
-            pop.innerText = '-' + dmg;
-            pop.style.left = x + 'px';
-            pop.style.top = y + 'px';
-            document.getElementById('layer-vfx').appendChild(pop);
-            setTimeout(() => pop.remove(), 1200);
-        },
-
-        addLog(tag, msg) {
-            const logEl = document.getElementById('game-event-log');
-            const entry = document.createElement('div');
-            entry.style.marginBottom = '5px';
-            entry.innerHTML = `<b style="color:var(--gold)">[${tag}]</b> <span style="color:#ccc">${msg}</span>`;
-            logEl.prepend(entry);
-            if (logEl.childNodes.length > 8) logEl.removeChild(logEl.lastChild);
-        }
-    };
-
-    // --- XỬ LÝ SỰ KIỆN BÀN PHÍM ---
-    window.addEventListener('keydown', e => { 
-        State.input.keys[e.key.toLowerCase()] = true; 
-        if (e.code === 'Space') Engine.performBasicAttack();
-    });
-    window.addEventListener('keyup', e => { 
-        State.input.keys[e.key.toLowerCase()] = false; 
-    });
-
-</script>
-    // Mở rộng dữ liệu môn phái (Võ Đang & Đường Môn) để đảm bảo không thiếu tính năng
-    Object.assign(SECT_DATA, {
-        VO_DANG: {
-            name: "Võ Đang Sơn", color: "#3498db",
-            bonus: { hp: 500, def: 50, spd: 2, atkMul: 1.2 },
-            skills: [
-                { id: 'vd1', n: "Thái Cực Kiếm", dmg: 2.2, mp: 40, cd: 1500, range: 250 },
-                { id: 'vd2', n: "Thiên Địa Vô Cực", dmg: 3.5, mp: 80, cd: 5000, range: 450 },
-                { id: 'vd3', n: "Vạn Kiếm Quy Tông", dmg: 6.0, mp: 250, cd: 12000, range: 600 }
-            ]
-        },
-        DUONG_MON: {
-            name: "Đường Gia Bảo", color: "#9b59b6",
-            bonus: { hp: -400, def: -30, spd: 8, atkMul: 2.0 },
-            skills: [
-                { id: 'dm1', n: "Truy Tâm Tiễn", dmg: 1.8, mp: 30, cd: 800, range: 500 },
-                { id: 'dm2', n: "Độc Tật Lê", dmg: 2.5, mp: 60, cd: 4000, range: 350 },
-                { id: 'dm3', n: "Bạo Vũ Lê Hoa", dmg: 8.5, mp: 300, cd: 15000, range: 700 }
-            ]
-        }
-    });
-
-    // --- LOGIC CHIÊU THỨC CHI TIẾT ---
-    Engine.castSkill = function(skill) {
-        if (State.player.mp < skill.mp) {
-            UI.addLog("CẢNH BÁO", "Nội lực không đủ để thi triển " + skill.n);
-            return;
-        }
-
-        const cdEl = document.getElementById(`cd-${skill.id}`);
-        if (cdEl && cdEl.style.height !== '0%' && cdEl.style.height !== '') {
-            UI.addLog("HỆ THỐNG", skill.n + " đang trong thời gian hồi chiêu!");
-            return;
-        }
-
-        // Trừ nội lực và bắt đầu hồi chiêu
-        State.player.mp -= skill.mp;
-        this.startCooldown(skill);
-        UI.addLog("KỸ NĂNG", "Thi triển: " + skill.n + "!");
-
-        // Hiệu ứng VFX chiêu thức (Vòng sáng lan tỏa)
-        this.createSkillVFX(State.player.x, State.player.y, skill.range || 300, State.player.sect.color);
-
-        // Quét mục tiêu trong phạm vi sát thương
-        let hitCount = 0;
-        const targets = [...State.world.mobs, ...State.world.bosses];
+    <main id="stage" style="display: none;">
         
-        targets.forEach(target => {
-            const dist = Math.hypot(State.player.x - target.x, State.player.y - target.y);
-            if (dist <= (skill.range || 300)) {
-                // Tính toán sát thương dựa trên hệ số chiêu thức
-                this.calculateDamage(State.player, target, skill.dmg);
-                hitCount++;
+        <div id="map-viewport">
+            <div id="map-container">
+                
+                <div id="terrain-layer">
+                    <div class="ground-texture-mesh"></div>
+                    <div id="static-scenery-entities">
+                        </div>
+                </div>
+
+                <div id="climate-layer">
+                    <div class="dynamic-fog-vfx"></div>
+                    <div class="sakura-petal-vfx"></div>
+                    <div class="weather-overlay-rain" id="rain-layer"></div>
+                    <div class="thunder-flash-layer"></div>
+                </div>
+
+                <div id="entities-layer">
+                    
+                    <article id="hero" class="entity-base hero-class">
+                        
+                        <div class="vfx-aura-socket" id="hero-aura"></div>
+                        <div class="vfx-wings-socket" id="hero-wings" style="display:none;">
+                            <div class="wing-l"></div>
+                            <div class="wing-r"></div>
+                        </div>
+
+                        <div class="overhead-hud-unit">
+                            <div class="rank-title">⭐ Vạn Cổ Kiếm Tôn ⭐</div>
+                            <div class="name-badge" id="hero-name-display">Đại Hiệp</div>
+                            <div class="guild-tag">&lt;Hào Kiệt Bang&gt;</div>
+                            <div class="hp-mini-bar"><div id="hero-hp-mini" class="fill"></div></div>
+                        </div>
+
+                        <div class="rig-skeleton">
+                            <div class="rig-head" id="hero-head">
+                                <div class="eye-glow-vfx"></div>
+                            </div>
+                            <div class="rig-torso">
+                                <div class="rig-arm arm-l">
+                                    <div class="shoulder"></div>
+                                    <div class="hand-socket"></div>
+                                </div>
+                                <div class="rig-arm arm-r">
+                                    <div class="shoulder"></div>
+                                    <div class="hand-socket">
+                                        <div class="weapon-instance" id="hero-weapon">
+                                            <div class="blade-core"></div>
+                                            <div class="blade-glint"></div>
+                                            <div class="atk-trail-vfx"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="rig-legs">
+                                <div class="leg leg-l"></div>
+                                <div class="leg leg-r"></div>
+                            </div>
+                        </div>
+
+                        <div class="dynamic-shadow-vfx"></div>
+                        <div class="dust-kick-vfx"></div>
+                    </article>
+
+                    <div id="npc-spawn-pool"></div>
+                    <div id="mob-spawn-pool"></div>
+                </div>
+
+                <div id="skill-vfx-surface"></div>
+                <div id="damage-popup-surface"></div>
+                <div id="loot-drop-surface"></div>
+            </div>
+        </div>
+
+        <div id="ui-master-hud">
+            
+            <header class="hud-player-vitals">
+                <div class="portrait-box" onclick="toggleModal('profile')">
+                    <div id="ui-sect-icon" class="sect-icon-v3"></div>
+                    <div class="lv-badge" id="ui-level">1</div>
+                </div>
+                <div class="bars-container">
+                    <div class="bar-unit hp"><div id="ui-hp-fill" class="fill"></div><span id="ui-hp-text">0/0</span></div>
+                    <div class="bar-unit mp"><div id="ui-mp-fill" class="fill"></div><span id="ui-mp-text">0/0</span></div>
+                    <div class="bar-unit exp"><div id="ui-exp-fill" class="fill"></div></div>
+                </div>
+                <div class="currency-group">
+                    <div class="gold-slot">💰 <span id="ui-gold">0</span></div>
+                    <div class="atk-slot">⚔️ <span id="ui-atk">0</span></div>
+                </div>
+            </header>
+
+            <aside class="hud-navigation">
+                <div class="map-label">
+                    <div class="m-name" id="ui-map-name">THÀNH TƯƠNG DƯƠNG</div>
+                    <div class="m-coords" id="ui-coords">X: 100, Y: 100</div>
+                </div>
+                <div class="radar-box">
+                    <div id="radar-entities-layer"></div>
+                    <div class="radar-scan-vfx"></div>
+                    <div class="radar-player-marker"></div>
+                </div>
+            </aside>
+
+            <section class="hud-chat-system">
+                <nav class="chat-tabs">
+                    <button class="tab active" data-channel="all">Tất Cả</button>
+                    <button class="tab" data-channel="world">Thế Giới</button>
+                    <button class="tab" data-channel="guild">Bang</button>
+                </nav>
+                <div id="chat-messages-flow" class="message-area"></div>
+                <div class="chat-input-bar">
+                    <input type="text" id="chat-input-field" placeholder="Nhập nội dung...">
+                    <button id="btn-chat-send">GỬI</button>
+                </div>
+            </section>
+
+            <nav id="hud-controls-mobile">
+                
+                <div id="joystick-wrapper">
+                    <div id="joystick-base">
+                        <div id="joystick-knob">
+                            <div class="knob-glow"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="skill-pad-cluster">
+                    <div class="btn-main-atk-slot">
+                        <button id="btn-attack-trigger">
+                            <span class="icon">⚔️</span>
+                            <div class="ripple-vfx"></div>
+                        </button>
+                    </div>
+
+                    <div class="skill-slot s1"><button id="btn-skill-1" class="s-btn"><div class="cd-mask" id="cd-1"></div><span class="key">1</span></button></div>
+                    <div class="skill-slot s2"><button id="btn-skill-2" class="s-btn"><div class="cd-mask" id="cd-2"></div><span class="key">2</span></button></div>
+                    <div class="skill-slot s3"><button id="btn-skill-3" class="s-btn"><div class="cd-mask" id="cd-3"></div><span class="key">3</span></button></div>
+                    
+                    <div class="skill-slot s4">
+                        <button id="btn-skill-4" class="s-btn ult-btn">
+                            <div class="cd-mask" id="cd-4"></div>
+                            <div class="ult-flame-vfx"></div>
+                            <span class="key">NỘ</span>
+                        </button>
+                    </div>
+
+                    <div class="util-slot fly"><button id="btn-fly-trigger">✈️</button></div>
+                    <div class="util-slot mount"><button id="btn-mount-trigger">🐎</button></div>
+                    <div class="util-slot sit"><button id="btn-meditate-trigger">🧘</button></div>
+                </div>
+            </nav>
+
+            <nav class="hud-side-menu">
+                <button onclick="openModal('inventory')">HÀNH TRANG</button>
+                <button onclick="openModal('skills')">KỸ NĂNG</button>
+                <button onclick="openModal('guild')">BANG HỘI</button>
+                <button onclick="openModal('shop')">KỲ TRÂN CÁC</button>
+            </nav>
+        </div>
+
+        <div id="global-modal-overlay" class="modal-closed">
+            <div class="modal-window-supreme">
+                <header class="modal-header">
+                    <div class="modal-decoration"></div>
+                    <h2 id="modal-title-text">DANH MỤC</h2>
+                    <button class="btn-modal-close" onclick="closeModal()">✖</button>
+                </header>
+                <div class="modal-body-content" id="modal-body-render">
+                    </div>
+                <footer class="modal-footer">
+                    <div id="modal-footer-msg">Hệ Thống Võ Lâm Supreme v2.0</div>
+                </footer>
+            </div>
+        </div>
+
+        <div id="toast-notify-layer"></div>
+
+    </main>
+
+    <audio id="bgm-player" loop></audio>
+    <audio id="sfx-player"></audio>
+
+    <script id="game-main-logic">
+        
+const GameEngine = (() => {
+    // 1. CẤU HÌNH HỆ THỐNG & DỮ LIỆU GỐC
+    const CONFIG = {
+        MAP_SIZE: 2000000,
+        FPS: 60,
+        GRAVITY: 0.5,
+        JOYSTICK_RADIUS: 80,
+        MAX_MOBS: 50,
+        SECTS: {
+            thieulam: { name: "Thiếu Lâm", element: "Kim", hp: 1500, atk: 80, color: "#ffffff", skill: "Sư Tử Hống" },
+            vodang: { name: "Võ Đang", element: "Thổ", hp: 1100, atk: 110, color: "#f1c40f", skill: "Thái Cực Kiếm" },
+            duongmon: { name: "Đường Môn", element: "Mộc", hp: 900, atk: 140, color: "#2ecc71", skill: "Bạo Vũ Lê Hoa" },
+            ngami: { name: "Nga Mi", element: "Thủy", hp: 1000, atk: 90, color: "#3498db", skill: "Chưởng Băng" },
+            caibang: { name: "Cái Bang", element: "Hỏa", hp: 1300, atk: 120, color: "#e74c3c", skill: "Kháng Long Hữu Hối" }
+        }
+    };
+
+    // 2. TRẠNG THÁI THỜI GIAN THỰC (GAME STATE)
+    const state = {
+        player: {
+            name: "Đại Hiệp", sect: "thieulam", lv: 1, exp: 0, 
+            hp: 1000, maxHp: 1000, mp: 500, maxMp: 500,
+            atk: 100, def: 50, gold: 0,
+            x: 1000000, y: 1000000, vx: 0, vy: 0, speed: 8,
+            isMoving: false, isAttacking: false, isFlying: false,
+            rotation: 0, currentSectData: null
+        },
+        joystick: { active: false, startX: 0, startY: 0, moveX: 0, moveY: 0, angle: 0 },
+        mobs: [],
+        vfx: [],
+        input: {},
+        camX: 0, camY: 0,
+        screenW: window.innerWidth, screenH: window.innerHeight
+    };
+
+    // 3. KHỞI TẠO MÔN PHÁI & GIAO DIỆN CHỌN NHÂN VẬT
+    const initSectPicker = () => {
+        const picker = document.getElementById('sect-picker');
+        Object.keys(CONFIG.SECTS).forEach(key => {
+            const s = CONFIG.SECTS[key];
+            const card = document.createElement('div');
+            card.className = 'sect-card';
+            card.innerHTML = `<h3>${s.name}</h3><p>Hệ: ${s.element}</p>`;
+            card.onclick = () => selectSect(key, card);
+            picker.appendChild(card);
+        });
+    };
+
+    const selectSect = (key, el) => {
+        document.querySelectorAll('.sect-card').forEach(c => c.classList.remove('active'));
+        el.classList.add('active');
+        state.player.sect = key;
+        state.player.currentSectData = CONFIG.SECTS[key];
+        
+        // Cập nhật Preview UI
+        document.getElementById('pre-name').innerText = CONFIG.SECTS[key].name;
+        document.getElementById('pre-desc').innerText = `Tuyệt kỹ: ${CONFIG.SECTS[key].skill}. Sức mạnh hệ ${CONFIG.SECTS[key].element} vĩnh cửu.`;
+        document.getElementById('pre-hp').style.width = (CONFIG.SECTS[key].hp / 15) + "%";
+        document.getElementById('pre-spd').style.width = (CONFIG.SECTS[key].atk / 1.5) + "%";
+    };
+
+    // 4. HỆ THỐNG ĐIỀU KHIỂN (CONTROLS)
+    const setupControls = () => {
+        const knob = document.getElementById('joystick-knob');
+        const base = document.getElementById('joystick-base');
+
+        const handleStart = (e) => {
+            const touch = e.touches ? e.touches[0] : e;
+            const rect = base.getBoundingClientRect();
+            state.joystick.startX = rect.left + rect.width / 2;
+            state.joystick.startY = rect.top + rect.height / 2;
+            state.joystick.active = true;
+        };
+
+        const handleMove = (e) => {
+            if (!state.joystick.active) return;
+            const touch = e.touches ? e.touches[0] : e;
+            let dx = touch.clientX - state.joystick.startX;
+            let dy = touch.clientY - state.joystick.startY;
+            let dist = Math.sqrt(dx*dx + dy*dy);
+            
+            if (dist > CONFIG.JOYSTICK_RADIUS) {
+                dx *= CONFIG.JOYSTICK_RADIUS / dist;
+                dy *= CONFIG.JOYSTICK_RADIUS / dist;
+            }
+
+            knob.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
+            state.joystick.angle = Math.atan2(dy, dx);
+            state.player.vx = (dx / CONFIG.JOYSTICK_RADIUS) * state.player.speed;
+            state.player.vy = (dy / CONFIG.JOYSTICK_RADIUS) * state.player.speed;
+            state.player.isMoving = true;
+        };
+
+        const handleEnd = () => {
+            state.joystick.active = false;
+            state.player.vx = 0; state.player.vy = 0;
+            state.player.isMoving = false;
+            knob.style.transform = `translate(-50%, -50%)`;
+        };
+
+        base.addEventListener('touchstart', handleStart);
+        window.addEventListener('touchmove', handleMove);
+        window.addEventListener('touchend', handleEnd);
+
+        // Nút tấn công
+        document.getElementById('btn-attack-trigger').onclick = () => performAttack();
+    };
+
+    // 5. CƠ CHẾ CHIẾN ĐẤU & KỸ NĂNG
+    const performAttack = () => {
+        if (state.player.isAttacking) return;
+        state.player.isAttacking = true;
+        const heroEl = document.getElementById('hero');
+        heroEl.classList.add('attacking');
+
+        // Tạo hiệu ứng chém
+        createVFX(state.player.x, state.player.y, 'slash');
+
+        // Kiểm tra va chạm với quái
+        state.mobs.forEach(mob => {
+            let d = Math.sqrt((state.player.x - mob.x)**2 + (state.player.y - mob.y)**2);
+            if (d < 150) {
+                damageMob(mob, state.player.atk);
             }
         });
 
-        if (hitCount > 0) {
-            UI.addLog("CHIẾN ĐẤU", `Gây sát thương lên ${hitCount} mục tiêu.`);
+        setTimeout(() => {
+            state.player.isAttacking = false;
+            heroEl.classList.remove('attacking');
+        }, 300);
+    };
+
+    const damageMob = (mob, dmg) => {
+        mob.hp -= dmg;
+        showDamagePopup(mob.x, mob.y, dmg);
+        if (mob.hp <= 0) {
+            state.player.gold += 50;
+            state.player.exp += 100;
+            removeMob(mob);
+            updateUI();
         }
-        UI.update();
     };
 
-    Engine.startCooldown = function(skill) {
-        const cdEl = document.getElementById(`cd-${skill.id}`);
-        if (!cdEl) return;
+    // 6. TRÍ TUỆ NHÂN TẠO QUÁI VẬT (MOB AI)
+    const spawnMob = () => {
+        if (state.mobs.length >= CONFIG.MAX_MOBS) return;
+        const mob = {
+            id: Date.now() + Math.random(),
+            x: state.player.x + (Math.random() - 0.5) * 1500,
+            y: state.player.y + (Math.random() - 0.5) * 1500,
+            hp: 200, maxHp: 200, speed: 2, atk: 10,
+            el: null
+        };
+        
+        const div = document.createElement('div');
+        div.className = 'entity mob-base';
+        div.innerHTML = `<div class="hp-bar"><div class="fill"></div></div><div class="mob-body">💀</div>`;
+        document.getElementById('mob-spawn-pool').appendChild(div);
+        mob.el = div;
+        state.mobs.push(mob);
+    };
 
-        let start = Date.now();
-        const timer = setInterval(() => {
-            let elapsed = Date.now() - start;
-            let progress = 100 - (elapsed / skill.cd * 100);
-            
-            if (progress <= 0) {
-                cdEl.style.height = '0%';
-                clearInterval(timer);
-            } else {
-                cdEl.style.height = progress + '%';
+    const updateMobs = () => {
+        state.mobs.forEach(mob => {
+            // AI Đuổi theo người chơi nếu lại gần
+            let dx = state.player.x - mob.x;
+            let dy = state.player.y - mob.y;
+            let dist = Math.sqrt(dx*dx + dy*dy);
+
+            if (dist < 600 && dist > 50) {
+                mob.x += (dx / dist) * mob.speed;
+                mob.y += (dy / dist) * mob.speed;
             }
-        }, 50);
-    };
 
-    Engine.createSkillVFX = function(x, y, range, color) {
-        const vfx = document.createElement('div');
-        vfx.style.position = 'absolute';
-        vfx.style.left = x + 'px';
-        vfx.style.top = y + 'px';
-        vfx.style.width = '0px';
-        vfx.style.height = '0px';
-        vfx.style.border = `4px solid ${color}`;
-        vfx.style.borderRadius = '50%';
-        vfx.style.transform = 'translate(-50%, -50%)';
-        vfx.style.pointerEvents = 'none';
-        vfx.style.boxShadow = `0 0 30px ${color}`;
-        vfx.style.transition = 'all 0.6s ease-out';
-        vfx.style.zIndex = '90';
-
-        document.getElementById('layer-vfx').appendChild(vfx);
-
-        // Hiệu ứng bùng nổ
-        requestAnimationFrame(() => {
-            vfx.style.width = (range * 2) + 'px';
-            vfx.style.height = (range * 2) + 'px';
-            vfx.style.opacity = '0';
+            // Cập nhật vị trí hiển thị
+            mob.el.style.transform = `translate(${mob.x}px, ${mob.y}px)`;
+            mob.el.querySelector('.fill').style.width = (mob.hp / mob.maxHp * 100) + "%";
         });
-
-        setTimeout(() => vfx.remove(), 700);
     };
 
-    /** ============================================================
-     * PHẦN 4: HỆ THỐNG NPC AI & GIẢI TOÁN THÔNG MINH
-     * ============================================================
-     */
+    // 7. VÒNG LẶP GAME (GAME LOOP - 60FPS)
+    const update = () => {
+        // Cập nhật tọa độ người chơi
+        state.player.x += state.player.vx;
+        state.player.y += state.player.vy;
 
-    const NPCLogic = {
-        interact(npcId) {
-            const npc = State.world.npcs.find(n => n.id === npcId);
-            if (!npc) return;
+        // Giới hạn bản đồ
+        state.player.x = Math.max(0, Math.min(CONFIG.MAP_SIZE, state.player.x));
+        state.player.y = Math.max(0, Math.min(CONFIG.MAP_SIZE, state.player.y));
 
-            // Dừng AI tuần tra của NPC khi đang nói chuyện
-            npc.vx = 0; npc.vy = 0;
-            npc.nextAction = Date.now() + 10000;
+        // Camera bám đuổi
+        state.camX = state.player.x - state.screenW / 2;
+        state.camY = state.player.y - state.screenH / 2;
 
-            const dialog = document.getElementById('dialogue-system');
-            const nameEl = document.getElementById('npc-display-name');
-            const msgEl = document.getElementById('npc-display-msg');
-            const optEl = document.getElementById('npc-display-options');
+        const mapContainer = document.getElementById('map-container');
+        mapContainer.style.transform = `translate(${-state.camX}px, ${-state.camY}px)`;
 
-            dialog.style.display = 'block';
-            nameEl.innerText = npc.name;
-            
-            // Tạo bài toán ngẫu nhiên
-            const a = Math.floor(Math.random() * 50) + 10;
-            const b = Math.floor(Math.random() * 50) + 10;
-            const result = a + b;
-
-            msgEl.innerHTML = `Chào đại hiệp! Ta có một câu đố nhỏ để thử thách căn cốt của ngươi:<br><br><b>${a} cộng ${b} bằng bao nhiêu?</b>`;
-            
-            optEl.innerHTML = '';
-            // Tạo 3 phương án trả lời
-            [result, result + 10, result - 5].sort(() => Math.random() - 0.5).forEach(val => {
-                const btn = document.createElement('button');
-                btn.style.padding = '10px 20px';
-                btn.style.cursor = 'pointer';
-                btn.innerText = "Đáp án: " + val;
-                btn.onclick = () => this.handleAnswer(val, result, npc);
-                optEl.appendChild(btn);
-            });
-        },
-
-        handleAnswer(choice, correct, npc) {
-            if (choice === correct) {
-                alert("NPC: Quả là thông minh tuyệt đỉnh! Nhận lấy phần thưởng này.");
-                State.player.exp += 2000;
-                State.player.money += 500;
-                UI.addLog("NPC", "Bạn đã trả lời đúng bài toán của " + npc.name);
-                Engine.checkLevelUp();
-            } else {
-                alert("NPC: Sai rồi! Đại hiệp cần luyện tập thêm về tính toán.");
-                UI.addLog("NPC", "Bạn đã trả lời sai câu đố.");
-            }
-            UI.closeDialogue();
-            UI.update();
+        // Cập nhật nhân vật
+        const hero = document.getElementById('hero');
+        hero.style.transform = `translate(${state.player.x}px, ${state.player.y}px)`;
+        
+        if (state.player.vx !== 0) {
+            hero.style.transform += ` scaleX(${state.player.vx > 0 ? 1 : -1})`;
         }
+
+        updateMobs();
+        requestAnimationFrame(update);
     };
 
-    UI.closeDialogue = function() {
-        document.getElementById('dialogue-system').style.display = 'none';
+    // 8. HỆ THỐNG GIAO DIỆN (UI UPDATES)
+    const updateUI = () => {
+        document.getElementById('ui-hp-fill').style.width = (state.player.hp / state.player.maxHp * 100) + "%";
+        document.getElementById('ui-hp-text').innerText = `${state.player.hp} / ${state.player.maxHp}`;
+        document.getElementById('ui-gold').innerText = state.player.gold;
+        document.getElementById('ui-atk').innerText = state.player.atk;
+        document.getElementById('ui-coords').innerText = `X: ${Math.floor(state.player.x / 100)}, Y: ${Math.floor(state.player.y / 100)}`;
     };
 
-    // Lắng nghe sự kiện click vào NPC trên Map
-    document.getElementById('layer-entities').addEventListener('click', (e) => {
-        let target = e.target;
-        while (target && !target.id) target = target.parentElement;
-        if (target && target.id.startsWith('npc-')) {
-            NPCLogic.interact(target.id);
-        }
-    });
-
-    /** ============================================================
-     * PHẦN 5: HỆ THỐNG LƯU TRỮ & KHỞI CHẠY (FINAL)
-     * ============================================================
-     */
-
-    const Persistence = {
-        save() {
-            const data = JSON.stringify(State.player);
-            localStorage.setItem('VOLAM_SAVE_DATA', data);
-            UI.addLog("HỆ THỐNG", "Đã lưu lại công lực vào sổ ký danh.");
-        },
-        load() {
-            const saved = localStorage.getItem('VOLAM_SAVE_DATA');
-            if (saved) {
-                const loadedData = JSON.parse(saved);
-                // Chỉ load nếu cùng môn phái hoặc xử lý phức tạp hơn tùy ý
-                UI.addLog("HỆ THỐNG", "Phát hiện dữ liệu cũ, đại hiệp có muốn tiếp tục?");
-            }
-        }
+    const showDamagePopup = (x, y, dmg) => {
+        const p = document.createElement('div');
+        p.className = 'dmg-text';
+        p.innerText = `-${dmg}`;
+        p.style.left = x + 'px';
+        p.style.top = y + 'px';
+        document.getElementById('damage-popup-surface').appendChild(p);
+        setTimeout(() => p.remove(), 800);
     };
 
-    // Tự động lưu mỗi 60 giây
-    setInterval(() => {
-        if (State.settings.isRunning) Persistence.save();
-    }, 60000);
+    // KHỞI CHẠY GAME
+    const start = () => {
+        const nameInput = document.getElementById('player-name-input').value;
+        if (nameInput) state.player.name = nameInput;
+        
+        document.getElementById('start-screen').style.opacity = '0';
+        setTimeout(() => {
+            document.getElementById('start-screen').style.display = 'none';
+            document.getElementById('stage').style.display = 'block';
+            updateUI();
+            update();
+            // Tự động sinh quái mỗi 3 giây
+            setInterval(spawnMob, 3000);
+        }, 1000);
+    };
 
-    // Xử lý phím tắt số 1, 2, 3, 4 để dùng skill
-    window.addEventListener('keydown', e => {
-        if (!State.player.sect) return;
-        const key = e.key;
-        if (key >= '1' && key <= '4') {
-            const skill = State.player.sect.skills[parseInt(key) - 1];
-            if (skill) Engine.castSkill(skill);
+    return {
+        init: () => {
+            initSectPicker();
+            setupControls();
+            document.getElementById('btn-enter-game').onclick = start;
         }
-    });
+    };
+})();
 
-    // Thêm các phái vào màn hình chọn ban đầu (Bổ sung cho phần 1)
-    const startList = document.querySelector('#start-screen div');
-    startList.innerHTML += `
-        <div class="pointer" onclick="Engine.init('VO_DANG')" style="width:300px; padding:40px; background:#111; border:2px solid #333; border-radius:20px; text-align:center; cursor:pointer; transition:0.3s;">
-            <h2 style="color:#3498db">VÕ ĐANG</h2>
-            <hr style="margin:15px 0; border:0; border-top:1px solid #333">
-            <p style="text-align:left; font-size:14px; line-height:2">
-                <span style="color:var(--exp)">● Nội lực vô song: +1000</span><br>
-                <span style="color:var(--exp)">● Tỉ lệ bạo kích: +1.2x</span><br>
-                <span style="color:var(--hp)">● Sinh lực: Trung bình</span><br>
-                <span style="color:var(--hp)">● Thủ pháp: Cân bằng</span>
-            </p>
-        </div>
-        <div class="pointer" onclick="Engine.init('DUONG_MON')" style="width:300px; padding:40px; background:#111; border:2px solid #333; border-radius:20px; text-align:center; cursor:pointer; transition:0.3s;">
-            <h2 style="color:#9b59b6">ĐƯỜNG MÔN</h2>
-            <hr style="margin:15px 0; border:0; border-top:1px solid #333">
-            <p style="text-align:left; font-size:14px; line-height:2">
-                <span style="color:var(--exp)">● Thân pháp cực nhanh: +8</span><br>
-                <span style="color:var(--exp)">● Ám khí sát thương: +2.0x</span><br>
-                <span style="color:var(--hp)">● Sinh lực cực thấp: -400</span><br>
-                <span style="color:var(--hp)">● Thủ yếu, dễ bị trọng thương</span>
-            </p>
-        </div>
-    `;
-
-    console.log("Hệ thống Võ Lâm Supreme: Vạn Cổ Quy Tông đã sẵn sàng khởi chạy!");
-
-</script>
+// Kích hoạt Engine
+window.onload = GameEngine.init;
+        
+    </script>
 </body>
-        </html>
-            
+    </html>
+    
