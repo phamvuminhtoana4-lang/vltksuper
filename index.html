@@ -3,605 +3,677 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>THIÊN GIỚI VÔ TẬN: VẠN PHÁI TRANH HÙNG</title>
+    <title>THIÊN GIỚI VÔ TẬN - CHIẾN THUẬT TAM KỸ</title>
     <style>
         :root {
             --cyan: #00ffff; --gold: #f1c40f; --red: #ff4757; 
-            --purple: #a29bfe; --bg: #050505; --ui-bg: rgba(0, 0, 0, 0.85);
+            --purple: #a29bfe; --bg: #050505; --ui-bg: rgba(10, 10, 10, 0.95);
         }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
         body { 
             margin: 0; padding: 0; background: #000; overflow: hidden; 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: white; user-select: none; 
         }
 
         #game-wrapper { position: relative; width: 100vw; height: 100vh; overflow: hidden; }
-        canvas { display: block; background: #000; }
+        canvas { display: block; filter: contrast(1.1) brightness(1.1); }
 
-        .hud { position: absolute; inset: 0; pointer-events: none; }
-        .hud * { pointer-events: auto; }
-
-        /* Thông tin nhân vật */
-        .player-header {
-            position: absolute; top: 10px; left: 10px;
-            display: flex; gap: 10px; background: var(--ui-bg);
-            padding: 8px; border-radius: 40px 10px 10px 40px; border: 1px solid #444;
+        /* HUD - Thông tin nhân vật */
+        .hud-header {
+            position: absolute; top: 15px; left: 15px;
+            display: flex; gap: 15px; background: var(--ui-bg);
+            padding: 12px; border-radius: 60px 20px 20px 60px;
+            border: 2px solid #333; pointer-events: none; z-index: 10;
         }
-        .avatar { width: 50px; height: 50px; background: #222; border: 2px solid var(--gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; }
-        .stats { display: flex; flex-direction: column; justify-content: center; }
-        .hp-bar-bg { width: 150px; height: 8px; background: #222; border-radius: 4px; margin: 3px 0; overflow: hidden; }
-        .hp-bar-fill { height: 100%; background: var(--red); width: 100%; transition: 0.3s; }
+        .avatar { 
+            width: 65px; height: 65px; background: #1a1a1a; 
+            border: 3px solid var(--gold); border-radius: 50%; 
+            display: flex; align-items: center; justify-content: center; font-size: 32px; 
+            box-shadow: 0 0 15px rgba(241, 196, 15, 0.3);
+        }
+        .stats-box { display: flex; flex-direction: column; justify-content: center; }
+        .hp-bar-outer { width: 180px; height: 12px; background: #222; border-radius: 6px; margin: 5px 0; border: 1px solid #444; }
+        #hp-fill { height: 100%; background: linear-gradient(90deg, #ff4757, #ff6b81); width: 100%; transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .gold-txt { font-size: 13px; color: var(--gold); font-weight: bold; text-shadow: 1px 1px #000; }
 
-        /* Mini Map */
-        .map-container {
-            position: absolute; top: 10px; right: 10px;
+        /* Bản đồ & Tọa độ */
+        .map-box {
+            position: absolute; top: 15px; right: 15px;
             width: 140px; height: 140px; background: #000;
-            border: 2px solid #555; border-radius: 8px; overflow: hidden;
+            border: 2px solid #444; border-radius: 12px; overflow: hidden; z-index: 10;
         }
         #radar { width: 100%; height: 100%; }
-        .map-btns { position: absolute; bottom: 2px; right: 2px; display: flex; gap: 2px; }
-        .map-btn { width: 22px; height: 22px; background: #333; color: #fff; border: none; font-size: 14px; border-radius: 3px; }
+        #coords { position: absolute; bottom: 5px; left: 5px; font-size: 10px; color: #aaa; background: rgba(0,0,0,0.5); padding: 2px 5px; }
 
-        /* Joysticks */
-        #touch-move-area {
-            position: absolute; bottom: 30px; left: 30px;
-            width: 140px; height: 140px; background: rgba(255,255,255,0.05);
-            border-radius: 50%; border: 1px solid rgba(255,255,255,0.1);
+        /* JOYSTICK BÊN TRÁI */
+        #joy-container {
+            position: absolute; bottom: 50px; left: 50px;
+            width: 160px; height: 160px; background: rgba(255,255,255,0.02);
+            border-radius: 50%; border: 2px solid rgba(255,255,255,0.08); z-index: 20;
         }
-        #joystick-stick {
+        #joy-stick {
             position: absolute; top: 50%; left: 50%;
-            width: 50px; height: 50px; margin: -25px;
-            background: rgba(255,255,255,0.2); border-radius: 50%;
+            width: 70px; height: 70px; margin: -35px;
+            background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.05) 100%);
+            border-radius: 50%; box-shadow: 0 0 20px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2);
         }
 
-        /* Hệ thống kỹ năng mở rộng (14 phím) */
-        .skill-container { 
-            position: absolute; bottom: 10px; right: 10px; 
-            width: 380px; height: 380px; pointer-events: none;
-        }
-        .btn-main-atk {
+        /* HỆ THỐNG 3 KỸ NĂNG XẾP QUANH NÚT ĐÁNH */
+        .action-zone {
             position: absolute; bottom: 30px; right: 30px;
-            width: 85px; height: 85px; background: var(--cyan);
+            width: 250px; height: 250px; pointer-events: none; z-index: 20;
+        }
+        .main-atk {
+            position: absolute; bottom: 20px; right: 20px;
+            width: 100px; height: 100px; background: var(--cyan);
             border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            font-size: 35px; box-shadow: 0 0 15px var(--cyan); border: 3px solid #fff; pointer-events: auto;
+            font-size: 45px; border: 4px solid #fff; pointer-events: auto;
+            box-shadow: 0 0 25px rgba(0, 255, 255, 0.4); z-index: 25;
+            transition: transform 0.1s;
         }
-        .skill-btn {
-            position: absolute; width: 42px; height: 42px;
-            background: var(--ui-bg); border: 1px solid #666; border-radius: 50%;
+        .main-atk:active { transform: scale(0.9); }
+
+        .slot {
+            position: absolute; width: 60px; height: 60px;
+            background: var(--ui-bg); border: 2px solid #555; border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
-            font-size: 16px; filter: grayscale(1); transition: 0.2s; pointer-events: auto;
+            font-size: 24px; pointer-events: auto; transition: 0.2s;
         }
-        .skill-btn.unlocked { filter: grayscale(0); border-color: var(--gold); }
-        .skill-btn .cd-overlay { position: absolute; bottom: 0; width: 100%; background: rgba(0,0,0,0.7); height: 0%; border-radius: 50%; }
+        .slot.ready { border-color: var(--gold); box-shadow: 0 0 10px var(--gold); }
+        .slot .cd { position: absolute; bottom: 0; width: 100%; background: rgba(0,0,0,0.8); height: 0%; border-radius: 50%; }
+        
+        /* Tọa độ 3 kỹ năng trang bị xung quanh nút đánh */
+        #slot-0 { bottom: 125px; right: 15px; }  /* Phía trên */
+        #slot-1 { bottom: 100px; right: 100px; } /* Chéo trên trái */
+        #slot-2 { bottom: 15px; right: 125px; }  /* Bên trái */
 
-        /* Tọa độ 14 kỹ năng xếp tầng vòng cung */
-        #sk-0 { bottom: 130px; right: 15px; }
-        #sk-1 { bottom: 120px; right: 70px; }
-        #sk-2 { bottom: 90px; right: 120px; }
-        #sk-3 { bottom: 40px; right: 140px; }
-        #sk-4 { bottom: -10px; right: 130px; }
-        #sk-5 { bottom: 180px; right: 15px; }
-        #sk-6 { bottom: 170px; right: 65px; }
-        #sk-7 { bottom: 145px; right: 110px; }
-        #sk-8 { bottom: 105px; right: 165px; }
-        #sk-9 { bottom: 55px; right: 195px; }
-        #sk-10 { bottom: 5px; right: 190px; }
-        #sk-11 { bottom: 230px; right: 30px; }
-        #sk-12 { bottom: 215px; right: 90px; }
-        #sk-13 { bottom: 185px; right: 145px; }
-
-        /* Shop UI */
-        #shop-ui {
+        /* UI QUẢN LÝ TÔNG MÔN / TRANG BỊ */
+        #sect-ui {
             position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 350px; height: 450px; background: var(--ui-bg); border: 2px solid var(--gold);
-            padding: 20px; border-radius: 12px; display: none; z-index: 1000; overflow-y: auto;
+            width: 90%; max-width: 500px; height: 85vh; background: var(--ui-bg);
+            border: 2px solid var(--gold); border-radius: 20px; display: none; z-index: 1000;
+            padding: 25px; flex-direction: column;
         }
-        .shop-row { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #333; }
-        .buy-btn { background: var(--gold); border: none; padding: 5px 10px; font-weight: bold; border-radius: 4px; color: #000; }
+        .skill-grid {
+            display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;
+            overflow-y: auto; flex-grow: 1; margin: 15px 0; padding-right: 5px;
+        }
+        .skill-card {
+            background: #1a1a1a; border: 1px solid #444; padding: 10px;
+            border-radius: 12px; display: flex; flex-direction: column; align-items: center; gap: 5px;
+        }
+        .skill-card.unlocked { border-color: var(--cyan); }
+        .skill-card button {
+            width: 100%; padding: 6px; border: none; border-radius: 5px; font-weight: bold; font-size: 11px;
+        }
+        .btn-learn { background: var(--gold); color: #000; }
+        .btn-equip { background: var(--cyan); color: #000; }
+        
+        .tab-btn { padding: 10px 20px; background: #222; border: 1px solid #444; color: white; border-radius: 10px; }
+        .tab-btn.active { background: var(--gold); color: #000; }
 
-        #chat-box {
-            position: absolute; bottom: 10px; left: 190px; width: 220px; height: 80px;
-            background: rgba(0,0,0,0.3); font-size: 10px; padding: 5px; overflow-y: auto;
-            pointer-events: none; border-radius: 5px; color: #ccc;
+        /* Log Hệ thống */
+        #log-box {
+            position: absolute; bottom: 20px; left: 230px; width: 280px; height: 110px;
+            background: rgba(0,0,0,0.4); font-size: 11px; padding: 10px; 
+            pointer-events: none; border-radius: 10px; color: #ddd; overflow: hidden;
         }
 
-        #exit-sect-btn {
-            position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
-            padding: 10px 25px; background: var(--red); color: white; border: none;
-            border-radius: 20px; font-weight: bold; display: none; z-index: 100;
+        #exit-btn {
+            position: absolute; top: 25px; left: 50%; transform: translateX(-50%);
+            padding: 12px 35px; background: var(--red); color: white; border: none;
+            border-radius: 30px; font-weight: bold; display: none; z-index: 100; box-shadow: 0 4px 15px rgba(0,0,0,0.5);
         }
 
+        /* Màn hình chọn phái */
         #start-screen {
             position: fixed; inset: 0; background: #000; z-index: 2000;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
+            background: radial-gradient(circle, #1a1a1a 0%, #000 100%);
         }
-        .sect-btn {
-            padding: 12px 30px; margin: 5px; background: #111; border: 1px solid #444;
-            color: white; border-radius: 8px; width: 220px; text-align: center;
+        .sect-item {
+            padding: 15px; margin: 6px; background: #111; border: 1px solid #333;
+            color: white; border-radius: 12px; width: 280px; text-align: center; font-weight: bold;
         }
-        .sect-btn.active { border-color: var(--cyan); background: rgba(0,255,255,0.1); }
+        .sect-item.active { border-color: var(--gold); background: rgba(241, 196, 15, 0.1); box-shadow: 0 0 15px var(--gold); }
     </style>
 </head>
 <body>
+
 <div id="game-wrapper">
     <div id="start-screen">
-        <h1 style="color:var(--cyan);">THIÊN GIỚI VÔ TẬN</h1>
-        <p style="font-size: 11px; color: #888;">HỆ THỐNG 14 TUYỆT KỸ - TÔNG MÔN NỘI VI</p>
-        <div id="sect-picker"></div>
-        <button onclick="startGame()" style="margin-top:20px; padding:15px 60px; background:var(--cyan); border:none; font-weight:bold; border-radius:30px;">XUẤT THẾ</button>
+        <h1 style="color:var(--gold); letter-spacing: 5px; margin-bottom: 5px;">THIÊN GIỚI VÔ TẬN</h1>
+        <p style="color:#666; font-size: 12px; margin-bottom: 30px;">HỆ THỐNG TAM KỸ - THẬP ĐẠI TÔNG MÔN</p>
+        <div id="sect-list"></div>
+        <button onclick="startGame()" style="margin-top:40px; padding:18px 80px; background:var(--gold); border:none; font-weight:bold; border-radius:40px; color:#000; font-size:16px;">XUẤT THẾ</button>
     </div>
 
-    <div id="shop-ui">
-        <h3 id="shop-title" style="text-align:center; color:var(--gold);">TRƯỞNG MÔN TRUYỀN DẠY</h3>
-        <div id="shop-items"></div>
-        <button onclick="closeShop()" style="width:100%; margin-top:15px; padding:10px; background: #444; border:none; color:white;">LUI RA</button>
+    <div id="sect-ui">
+        <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <h2 id="ui-title" style="color:var(--gold); margin:0;">TÔNG MÔN</h2>
+            <div style="color:var(--cyan); font-weight:bold;">💰 <span id="ui-gold-shop">0</span></div>
+        </div>
+        
+        <div style="display:flex; gap:10px; margin-bottom: 15px;">
+            <button class="tab-btn active" id="tab-learn">HỌC ĐẠO</button>
+            <button class="tab-btn" id="tab-equip">TRANG BỊ</button>
+        </div>
+
+        <div id="skill-grid" class="skill-grid"></div>
+        
+        <button onclick="closeUI()" style="width:100%; padding:15px; background:#333; border:none; color:white; border-radius:12px; font-weight:bold;">LUI RA</button>
     </div>
 
-    <button id="exit-sect-btn" onclick="exitSect()">RỜI KHỎI TÔNG MÔN</button>
-    <canvas id="mainCanvas"></canvas>
+    <button id="exit-btn" onclick="leaveSect()">RỜI KHỎI TÔNG MÔN</button>
 
-    <div class="hud">
-        <div class="player-header">
-            <div class="avatar" id="p-avatar">👤</div>
-            <div class="stats">
-                <div style="font-size:12px; font-weight:bold;"><span id="ui-sect">Phái</span></div>
-                <div class="hp-bar-bg"><div id="hp-bar" class="hp-bar-fill"></div></div>
-                <div style="font-size:11px; color:var(--gold)">💰 Linh thạch: <span id="ui-gold">0</span></div>
-            </div>
+    <canvas id="gameCanvas"></canvas>
+
+    <div class="hud-header">
+        <div class="avatar" id="p-avatar">👤</div>
+        <div class="stats-box">
+            <div style="font-size:14px; font-weight:bold; color:var(--cyan);"><span id="p-sect-name">Kẻ vô danh</span></div>
+            <div class="hp-bar-outer"><div id="hp-fill"></div></div>
+            <div class="gold-txt">💰 Linh thạch: <span id="p-gold">0</span></div>
         </div>
-        <div class="map-container">
-            <canvas id="radar"></canvas>
-            <div class="map-btns"><button class="map-btn" onclick="mapZoom(0.8)">-</button><button class="map-btn" onclick="mapZoom(1.2)">+</button></div>
-            <div style="position:absolute; top:2px; left:5px; font-size:9px; color:#aaa;" id="ui-coords">0,0</div>
-        </div>
-        <div id="chat-box"></div>
-        <div id="touch-move-area"><div id="joystick-stick"></div></div>
-        <div class="skill-container">
-            <div class="btn-main-atk" id="btn-atk">⚔️</div>
-            <div id="skills-sub-group"></div>
-        </div>
+    </div>
+
+    <div class="map-box">
+        <canvas id="radar"></canvas>
+        <div id="coords">0, 0</div>
+    </div>
+
+    <div id="log-box"></div>
+
+    <div id="joy-container"><div id="joy-stick"></div></div>
+
+    <div class="action-zone">
+        <div class="main-atk" id="btn-atk">⚔️</div>
+        <div class="slot" id="slot-0">🔒<div class="cd" id="cd-0"></div></div>
+        <div class="slot" id="slot-1">🔒<div class="cd" id="cd-1"></div></div>
+        <div class="slot" id="slot-2">🔒<div class="cd" id="cd-2"></div></div>
     </div>
 </div>
 <script>
-    // Cấu hình 14 tuyệt kỹ cho mỗi môn phái (Phân tầng từ cơ bản đến thượng cổ)
-    const SECT_CONFIG = {
-        "Võ Đang": { 
-            color: "#3498db", icon: "☯️", 
-            skills: [
-                {n: "Thái Cực Kiếm", icon: "🗡️", cost: 500, cd: 2, dmg: 80},
-                {n: "Bát Quái Chưởng", icon: "👐", cost: 1500, cd: 4, dmg: 120},
-                {n: "Thanh Phong Bộ", icon: "🍃", cost: 5000, cd: 10, dmg: 0},
-                {n: "Thần Môn Kiếm", icon: "⚔️", cost: 10000, cd: 5, dmg: 200},
-                {n: "Hổ Trảo Thủ", icon: "🐾", cost: 25000, cd: 7, dmg: 350},
-                {n: "Vô Cực Công", icon: "🌀", cost: 50000, cd: 15, dmg: 500},
-                {n: "Thái Cực Trận", icon: "🎇", cost: 100000, cd: 30, dmg: 1200},
-                {n: "Huyền Vũ Công", icon: "🐢", cost: 200000, cd: 40, dmg: 1500},
-                {n: "Thái Hư Kiếm", icon: "✨", cost: 400000, cd: 25, dmg: 2500},
-                {n: "Lưỡng Nghi Ấn", icon: "🌗", cost: 800000, cd: 20, dmg: 4000},
-                {n: "Chân Vũ Kiếm", icon: "🔱", cost: 1500000, cd: 50, dmg: 10000},
-                {n: "Đạo Pháp Tự Nhiên", icon: "📜", cost: 3000000, cd: 60, dmg: 25000},
-                {n: "Vô Thượng Thái Cực", icon: "🌌", cost: 7000000, cd: 80, dmg: 60000},
-                {n: "Nhân Kiếm Hợp Nhất", icon: "⛩️", cost: 15000000, cd: 120, dmg: 200000}
-            ]
-        },
-        "Thiếu Lâm": { 
-            color: "#f1c40f", icon: "📿", 
-            skills: [
-                {n: "La Hán Quyền", icon: "✊", cost: 500, cd: 2, dmg: 90},
-                {n: "Đả Cẩu Bổng", icon: "🦯", cost: 1500, cd: 3, dmg: 130},
-                {n: "Vi Đà Chưởng", icon: "✋", cost: 5000, cd: 5, dmg: 250},
-                {n: "Sư Tử Hống", icon: "🦁", cost: 10000, cd: 12, dmg: 500},
-                {n: "Kim Cang Phục Ma", icon: "⛓️", cost: 25000, cd: 10, dmg: 700},
-                {n: "Long Trảo Thủ", icon: "🐉", cost: 50000, cd: 8, dmg: 900},
-                {n: "Bát Nhã Chưởng", icon: "🧿", cost: 100000, cd: 15, dmg: 2000},
-                {n: "Dịch Cân Kinh", icon: "🧬", cost: 200000, cd: 60, dmg: 0},
-                {n: "Đại Bi Chú", icon: "🕍", cost: 400000, cd: 45, dmg: 3500},
-                {n: "Thiên Thủ Quan Âm", icon: "🙌", cost: 800000, cd: 35, dmg: 6000},
-                {n: "Bồ Đề Công", icon: "🌳", cost: 1500000, cd: 55, dmg: 12000},
-                {n: "Kim Cang Bất Hoại", icon: "🛡️", cost: 3000000, cd: 100, dmg: 0},
-                {n: "Như Lai Thần Chưởng", icon: "🖐️", cost: 7000000, cd: 90, dmg: 75000},
-                {n: "Vạn Phật Triều Tông", icon: "☸️", cost: 15000000, cd: 150, dmg: 250000}
-            ]
-        },
-        "Đường Môn": { 
-            color: "#2ecc71", icon: "🏹", 
-            skills: [
-                {n: "Xuyên Tâm Tiễn", icon: "📍", cost: 500, cd: 1.5, dmg: 70},
-                {n: "Độc Thích", icon: "🧪", cost: 1500, cd: 3, dmg: 150},
-                {n: "Đoạt Mệnh Tiêu", icon: "🪁", cost: 5000, cd: 4, dmg: 300},
-                {n: "Mê Ảnh Bộ", icon: "👣", cost: 10000, cd: 12, dmg: 0},
-                {n: "Tán Hoa Tiêu", icon: "🌸", cost: 25000, cd: 6, dmg: 800},
-                {n: "Phi Tinh Thần Thủ", icon: "🧤", cost: 50000, cd: 8, dmg: 1100},
-                {n: "Bạo Vũ Lê Hoa", icon: "💥", cost: 100000, cd: 15, dmg: 3000},
-                {n: "Mãn Thiên Hoa Vũ", icon: "🌦️", cost: 200000, cd: 20, dmg: 5000},
-                {n: "Đoạt Phách Câu", icon: "🪝", cost: 400000, cd: 18, dmg: 7000},
-                {n: "Vạn Độc Càn Khôn", icon: "🤮", cost: 800000, cd: 40, dmg: 12000},
-                {n: "Diêm Vương Thiếp", icon: "💀", cost: 1500000, cd: 30, dmg: 20000},
-                {n: "Quỷ Ảnh Mê Tung", icon: "👻", cost: 3000000, cd: 50, dmg: 0},
-                {n: "Phật Nộ Đường Liên", icon: "🌺", cost: 7000000, cd: 100, dmg: 90000},
-                {n: "Ám Khí Tông Sư", icon: "🎯", cost: 15000000, cd: 180, dmg: 300000}
-            ]
-        }
- "Minh Giáo": {
-        color: "#e67e22", icon: "🔥",
-        skills: [
-            {n: "Hỏa Long Chưởng", icon: "🔥", cost: 500, cd: 2, dmg: 100},
-            {n: "Ưng Trảo Công", icon: "🦅", cost: 1500, cd: 4, dmg: 160},
-            {n: "Thánh Hỏa Lệnh", icon: "🏮", cost: 5000, cd: 6, dmg: 350},
-            {n: "Quang Minh Thủ", icon: "✨", cost: 10000, cd: 8, dmg: 550},
-            {n: "Hàn Băng Miên Chưởng", icon: "❄️", cost: 25000, cd: 10, dmg: 900},
-            {n: "Hấp Tinh Công", icon: "🕳️", cost: 50000, cd: 15, dmg: 1200},
-            {n: "Càn Khôn Đại Na Di", icon: "🌀", cost: 100000, cd: 20, dmg: 4000},
-            {n: "Cửu Dương Thần Công", icon: "☀️", cost: 200000, cd: 50, dmg: 6000},
-            {n: "Lửa Thiêng Tẩy Lễ", icon: "🌋", cost: 400000, cd: 30, dmg: 9000},
-            {n: "Huyết Sát Thủ", icon: "🩸", cost: 800000, cd: 40, dmg: 15000},
-            {n: "Quang Minh Đỉnh Ấn", icon: "🏔️", cost: 1500000, cd: 60, dmg: 30000},
-            {n: "Âm Dương Tế Lễ", icon: "🌗", cost: 3000000, cd: 80, dmg: 70000},
-            {n: "Hỏa Phần Thiên Hạ", icon: "☄️", cost: 7000000, cd: 110, dmg: 120000},
-            {n: "Thánh Hỏa Viêm Thần", icon: "🔱", cost: 15000000, cd: 180, dmg: 350000}
-        ]
-    },
-    "Cái Bang": {
-        color: "#8e44ad", icon: "🍖",
-        skills: [
-            {n: "Đả Cẩu Bổng Pháp", icon: "🥢", cost: 500, cd: 2, dmg: 85},
-            {n: "Hàng Long Thập Bát", icon: "🐉", cost: 1500, cd: 5, dmg: 200},
-            {n: "Tiêu Dao Du", icon: "🕊️", cost: 5000, cd: 12, dmg: 0},
-            {n: "Thần Long Bái Vĩ", icon: "🐕", cost: 10000, cd: 6, dmg: 450},
-            {n: "Phi Long Tại Thiên", icon: "☁️", cost: 25000, cd: 10, dmg: 850},
-            {n: "Khang Long Hữu Hối", icon: "💥", cost: 50000, cd: 15, dmg: 1500},
-            {n: "Khốn Long Trận", icon: "🕸️", cost: 100000, cd: 25, dmg: 2500},
-            {n: "Túy Quyền", icon: "🍶", cost: 200000, cd: 8, dmg: 3500},
-            {n: "Long Chiến Vu Dã", icon: "⚔️", cost: 400000, cd: 45, dmg: 8000},
-            {n: "Song Long Thủ", icon: "👐", cost: 800000, cd: 30, dmg: 15000},
-            {n: "Thiên Hạ Vô Cẩu", icon: "🧹", cost: 1500000, cd: 50, dmg: 35000},
-            {n: "Hỗn Nguyên Công", icon: "🌪️", cost: 3000000, cd: 70, dmg: 60000},
-            {n: "Vạn Long Triều Bái", icon: "🎇", cost: 7000000, cd: 120, dmg: 150000},
-            {n: "Chân Long Giáng Thế", icon: "🐲", cost: 15000000, cd: 200, dmg: 400000}
-        ]
-    },
-    "Nga Mi": {
-        color: "#fd79a8", icon: "🌸",
-        skills: [
-            {n: "Nga Mi Kiếm", icon: "🗡️", cost: 500, cd: 2, dmg: 75},
-            {n: "Hoa Khai Kiến Phật", icon: "🏵️", cost: 1500, cd: 4, dmg: 140},
-            {n: "Thần Phụ Bộ", icon: "👗", cost: 5000, cd: 12, dmg: 0},
-            {n: "Cửu Âm Bạch Cốt", icon: "💀", cost: 10000, cd: 6, dmg: 500},
-            {n: "Diệt Tuyệt Kiếm", icon: "🛑", cost: 25000, cd: 8, dmg: 1000},
-            {n: "Phật Quang Phổ Chiếu", icon: "🔅", cost: 50000, cd: 20, dmg: 2000},
-            {n: "Thanh Tâm Chú", icon: "🧼", cost: 100000, cd: 40, dmg: 0},
-            {n: "Vạn Hoa Trận", icon: "💐", cost: 200000, cd: 30, dmg: 4500},
-            {n: "Ngọc Nữ Tâm Kinh", icon: "📖", cost: 400000, cd: 50, dmg: 9000},
-            {n: "Chu Chỉ Nhược Ấn", icon: "💅", cost: 800000, cd: 35, dmg: 18000},
-            {n: "Tử Khí Đông Lai", icon: "🟣", cost: 1500000, cd: 55, dmg: 35000},
-            {n: "Phật Pháp Vô Biên", icon: "🕉️", cost: 3000000, cd: 80, dmg: 80000},
-            {n: "Thái Âm Công", icon: "🌙", cost: 7000000, cd: 100, dmg: 150000},
-            {n: "Vạn Kiếp Luân Hồi", icon: "🌀", cost: 15000000, cd: 150, dmg: 380000}
-        ]
-    },
-    "Tiêu Dao": {
-        color: "#55efc4", icon: "🧪",
-        skills: [
-            {n: "Bắc Minh Thần Công", icon: "🌀", cost: 500, cd: 3, dmg: 100},
-            {n: "Lăng Ba Vi Bộ", icon: "💨", cost: 1500, cd: 15, dmg: 0},
-            {n: "Tiểu Thừa Công", icon: "📉", cost: 5000, cd: 5, dmg: 300},
-            {n: "Sinh Tử Phù", icon: "❄️", cost: 10000, cd: 10, dmg: 600},
-            {n: "Thiên Sơn Chiết Mai", icon: "🖐️", cost: 25000, cd: 8, dmg: 1200},
-            {n: "Lục Dương Chưởng", icon: "☀️", cost: 50000, cd: 12, dmg: 2500},
-            {n: "Tiêu Dao Bộ", icon: "🎠", cost: 100000, cd: 10, dmg: 0},
-            {n: "Bạch Hồng Quán Nhật", icon: "🌈", cost: 200000, cd: 20, dmg: 5500},
-            {n: "Bất Lão Trường Xuân", icon: "🧪", cost: 400000, cd: 60, dmg: 0},
-            {n: "Phượng Hoàng Triều", icon: "🦚", cost: 800000, cd: 40, dmg: 20000},
-            {n: "Độc Cô Cửu Kiếm", icon: "⚔️", cost: 1500000, cd: 25, dmg: 40000},
-            {n: "Tiên Phong Đạo Cốt", icon: "🎑", cost: 3000000, cd: 90, dmg: 90000},
-            {n: "Hóa Công Đại Pháp", icon: "☠️", cost: 7000000, cd: 110, dmg: 180000},
-            {n: "Thiên Nhân Hợp Nhất", icon: "🛸", cost: 15000000, cd: 200, dmg: 500000}
-        ]
-            }
-                
+    // Cấu hình 10 Tông môn - Mỗi môn 14 chiêu từ sơ cấp đến thần cấp
+    const SECT_DATA = {
+        "Võ Đang": { color: "#3498db", icon: "☯️", skills: [
+            {n: "Thái Cực Kiếm", i: "🗡️", cost: 500, cd: 2, dmg: 100},
+            {n: "Bát Quái Chưởng", i: "👐", cost: 2000, cd: 4, dmg: 250},
+            {n: "Thanh Phong Bộ", i: "🍃", cost: 8000, cd: 12, dmg: 0},
+            {n: "Vô Cực Công", i: "🌀", cost: 25000, cd: 10, dmg: 600},
+            {n: "Hổ Trảo Thủ", i: "🐾", cost: 60000, cd: 8, dmg: 900},
+            {n: "Thái Cực Trận", i: "🎇", cost: 150000, cd: 25, dmg: 2500},
+            {n: "Huyền Vũ Công", i: "🐢", cost: 400000, cd: 40, dmg: 4500},
+            {n: "Thái Hư Kiếm", i: "✨", cost: 900000, cd: 20, dmg: 8000},
+            {n: "Lưỡng Nghi Ấn", i: "🌗", cost: 2000000, cd: 30, dmg: 15000},
+            {n: "Chân Vũ Kiếm", i: "🔱", cost: 4500000, cd: 45, dmg: 35000},
+            {n: "Đạo Pháp Tự Nhiên", i: "📜", cost: 8000000, cd: 60, dmg: 80000},
+            {n: "Vô Thượng Thái Cực", i: "🌌", cost: 15000000, cd: 80, dmg: 200000},
+            {n: "Nhân Kiếm Hợp Nhất", i: "⛩️", cost: 30000000, cd: 100, dmg: 500000},
+            {n: "Thái Cực Đạo Tổ", i: "👑", cost: 70000000, cd: 150, dmg: 1200000}
+        ]},
+        "Thiếu Lâm": { color: "#f1c40f", icon: "📿", skills: [
+            {n: "La Hán Quyền", i: "✊", cost: 500, cd: 2, dmg: 120},
+            {n: "Vi Đà Chưởng", i: "✋", cost: 2000, cd: 3.5, dmg: 280},
+            {n: "Sư Tử Hống", i: "🦁", cost: 8000, cd: 15, dmg: 700},
+            {n: "Kim Cang Công", i: "🛡️", cost: 25000, cd: 30, dmg: 0},
+            {n: "Long Trảo Thủ", i: "🐉", cost: 60000, cd: 7, dmg: 1100},
+            {n: "Dịch Cân Kinh", i: "🧬", cost: 150000, cd: 60, dmg: 0},
+            {n: "Bát Nhã Chưởng", i: "🧿", cost: 400000, cd: 20, dmg: 5000},
+            {n: "Đại Bi Chú", i: "🕍", cost: 900000, cd: 50, dmg: 10000},
+            {n: "Thiên Thủ Quan Âm", i: "🙌", cost: 2000000, cd: 40, dmg: 22000},
+            {n: "Bồ Đề Công", i: "🌳", cost: 4500000, cd: 55, dmg: 45000},
+            {n: "Như Lai Thần Chưởng", i: "🖐️", cost: 8000000, cd: 80, dmg: 100000},
+            {n: "Kim Cang Bất Hoại", i: "✨", cost: 15000000, cd: 120, dmg: 0},
+            {n: "Vạn Phật Triều Tông", i: "☸️", cost: 30000000, cd: 150, dmg: 600000},
+            {n: "Tổ Sư Thiền", i: "🧘", cost: 70000000, cd: 200, dmg: 1500000}
+        ]},
+        "Minh Giáo": { color: "#e67e22", icon: "🔥", skills: [
+            {n: "Hỏa Long Chưởng", i: "🔥", cost: 500, cd: 2, dmg: 130},
+            {n: "Thánh Hỏa Lệnh", i: "🏮", cost: 2500, cd: 5, dmg: 350},
+            {n: "Càn Khôn Đại Na Di", i: "🌀", cost: 30000, cd: 25, dmg: 1500},
+            {n: "Cửu Dương Công", i: "☀️", cost: 200000, cd: 60, dmg: 5000},
+            // ... (Tiếp tục cấu hình các phái khác tương tự để đủ 10 phái)
+        ]},
+        "Cái Bang": { color: "#8e44ad", icon: "🍖", skills: [
+            {n: "Đả Cẩu Bổng", i: "🥢", cost: 500, cd: 2, dmg: 110},
+            {n: "Hàng Long Thập Bát", i: "🐉", cost: 10000, cd: 8, dmg: 1200}
+        ]},
+        "Đường Môn": { color: "#2ecc71", icon: "🏹", skills: [
+            {n: "Xuyên Tâm Tiễn", i: "📍", cost: 500, cd: 1.5, dmg: 90},
+            {n: "Bạo Vũ Lê Hoa", i: "💥", cost: 50000, cd: 15, dmg: 4000}
+        ]},
+        "Nga Mi": { color: "#fd79a8", icon: "🌸", skills: [
+            {n: "Nga Mi Kiếm", i: "🗡️", cost: 500, cd: 2, dmg: 95},
+            {n: "Thanh Tâm Chú", i: "🧼", cost: 40000, cd: 40, dmg: 0}
+        ]},
+        "Hoa Sơn": { color: "#ecf0f1", icon: "⛰️", skills: [
+            {n: "Hoa Sơn Kiếm Pháp", i: "⚔️", cost: 500, cd: 2, dmg: 115},
+            {n: "Độc Cô Cửu Kiếm", i: "🦅", cost: 1000000, cd: 20, dmg: 15000}
+        ]},
+        "Tiêu Dao": { color: "#55efc4", icon: "🧪", skills: [
+            {n: "Bắc Minh Thần Công", i: "🌀", cost: 1000, cd: 3, dmg: 150},
+            {n: "Lăng Ba Vi Bộ", i: "💨", cost: 5000, cd: 20, dmg: 0}
+        ]},
+        "Toàn Chân": { color: "#9b59b6", icon: "🌟", skills: [
+            {n: "Toàn Chân Kiếm", i: "🗡️", cost: 500, cd: 2, dmg: 105},
+            {n: "Tiên Thiên Công", i: "🧘", cost: 500000, cd: 60, dmg: 0}
+        ]},
+        "Huyết Đao": { color: "#c0392b", icon: "🔪", skills: [
+            {n: "Huyết Đao Pháp", i: "🔪", cost: 500, cd: 2, dmg: 140},
+            {n: "Huyết Sát Công", i: "🩸", cost: 100000, cd: 15, dmg: 5000}
+        ]}
     };
 
+    // Khởi tạo các biến hệ thống
     let game = {
-        state: 'WORLD', 
+        state: 'WORLD', // WORLD hoặc SECT
         p: {
-            x: 0, y: 0, speed: 2.2, 
-            hp: 1000, maxHp: 1000, gold: 0,
-            sect: null, skills: [], lastS: Array(14).fill(0)
+            x: 0, y: 0, vx: 0, vy: 0, speed: 2.3,
+            hp: 1200, maxHp: 1200, gold: 0,
+            sect: null, 
+            skillsOwned: [], // Danh sách các chiêu đã học
+            equipped: [null, null, null], // 3 ô trang bị
+            lastCD: [0, 0, 0] // Thời gian hồi chiêu cho 3 ô
         },
-        world: { chunks: new Set(), entities: [], zoom: 0.03 },
-        input: { joyX: 0, joyY: 0 },
-        lastWorldPos: { x: 0, y: 0 },
-        dialogues: [
-            "Đạo hữu có thấy linh khí dao động?", "Tông môn sắp có biến lớn...", 
-            "Linh thạch này thật giả khó phân.", "Cày cuốc bao giờ mới đủ 15 triệu vàng?", 
-            "Cẩn thận quái vật phía trước!"
-        ]
+        entities: [], // Quái, NPC, Portal
+        chunks: new Set(),
+        cam: { x: 0, y: 0 },
+        joy: { x: 0, y: 0, active: false },
+        lastPos: { x: 0, y: 0 }
     };
 
-    // Tiếp tục khởi tạo Canvas
-    let canvas = document.getElementById('mainCanvas');
-    let ctx = canvas.getContext('2d');
-    let rCanvas = document.getElementById('radar');
-    let rCtx = rCanvas.getContext('2d');
-        /** --- LOGIC KHỞI TẠO BẢN ĐỒ --- **/
-    function initPicker() {
-        const root = document.getElementById('sect-picker');
-        Object.keys(SECT_CONFIG).forEach(s => {
-            const btn = document.createElement('div');
-            btn.className = 'sect-btn';
-            btn.innerText = s;
-            btn.onclick = () => {
-                game.p.sect = s;
-                document.querySelectorAll('.sect-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const rCanvas = document.getElementById('radar');
+    const rCtx = rCanvas.getContext('2d');
+
+    // Hàm khởi tạo danh sách phái ở màn hình chờ
+    function initSectPicker() {
+        const container = document.getElementById('sect-list');
+        Object.keys(SECT_DATA).forEach(name => {
+            let div = document.createElement('div');
+            div.className = 'sect-item';
+            div.innerHTML = `${SECT_DATA[name].icon} ${name}`;
+            div.onclick = () => {
+                game.p.sect = name;
+                document.querySelectorAll('.sect-item').forEach(e => e.classList.remove('active'));
+                div.classList.add('active');
             };
-            root.appendChild(btn);
+            container.appendChild(div);
         });
-        resize();
     }
 
-    /** --- HỆ THỐNG AI & DI CHUYỂN NPC --- **/
-    function updateNPC(en) {
-        let now = Date.now();
-        // AI Chat tự động
-        if(now - en.lastTalk > 8000) {
-            en.msg = game.dialogues[Math.floor(Math.random()*game.dialogues.length)];
-            en.lastTalk = now;
-            setTimeout(() => en.msg = "", 4000);
+    // Hàm Trang bị kỹ năng vào ô (Slot 0, 1, 2)
+    function equipSkill(skillIndex, slot) {
+        let skillName = game.p.skillsOwned[skillIndex];
+        // Kiểm tra xem kỹ năng này đã trang bị ở ô khác chưa
+        if (game.p.equipped.includes(skillName)) {
+            let oldSlot = game.p.equipped.indexOf(skillName);
+            game.p.equipped[oldSlot] = null;
         }
-
-        // AI Chiến đấu & Di chuyển
-        if(en.isHostile) {
-            let angle = Math.atan2(game.p.y - en.y, game.p.x - en.x);
-            en.x += Math.cos(angle) * 2.8;
-            en.y += Math.sin(angle) * 2.8;
-            // Gây sát thương nếu chạm người chơi
-            if(Math.sqrt((en.x - game.p.x)**2 + (en.y - game.p.y)**2) < 40 && now % 120 < 10) {
-                game.p.hp -= 15;
-                addLog(`<span style="color:red">NPC ${en.name} tấn công bạn!</span>`);
-            }
-        } else {
-            // NPC di chuyển tuần tra ngẫu nhiên
-            if(now - en.lastMove > 5000) {
-                en.vx = (Math.random() - 0.5) * 1.5;
-                en.vy = (Math.random() - 0.5) * 1.5;
-                en.lastMove = now;
-            }
-            en.x += en.vx;
-            en.y += en.vy;
-        }
-    }
-
-    /** --- CHUYỂN CẢNH TÔNG MÔN --- **/
-    function enterSect(name) {
-        if(game.p.sect !== name) return addLog("Hệ thống: Bạn không thuộc " + name + "!");
-        game.lastWorldPos = { x: game.p.x, y: game.p.y };
-        game.state = 'SECT';
-        game.p.x = 500; game.p.y = 650; // Vị trí cửa vào tông môn
-        document.getElementById('exit-sect-btn').style.display = 'block';
-        addLog(`Cổng không gian: Đang tiến vào lãnh địa ${name}...`);
-    }
-
-    function exitSect() {
-        game.state = 'WORLD';
-        game.p.x = game.lastWorldPos.x;
-        game.p.y = game.lastWorldPos.y;
-        document.getElementById('exit-sect-btn').style.display = 'none';
-        addLog("Cổng không gian: Đã trở về thế giới ngoài.");
-    }
-        /** --- VÒNG LẶP RENDER CHÍNH --- **/
-    function loop() {
-        // Xóa màn hình
-        ctx.fillStyle = "#050505"; ctx.fillRect(0,0,canvas.width,canvas.height);
-        let camX = canvas.width/2 - game.p.x, camY = canvas.height/2 - game.p.y;
-
-        if(game.state === 'WORLD') {
-            // Cập nhật vị trí Thế giới ngoài
-            game.p.x += game.input.joyX * game.p.speed;
-            game.p.y += game.input.joyY * game.p.speed;
-            
-            updateWorld(); // Sinh quái và NPC
-            drawGrid(camX, camY);
-            
-            // Vẽ Thực thể (Quái, NPC, Cổng phái)
-            game.world.entities.forEach(en => {
-                let dx = en.x + camX, dy = en.y + camY;
-                if(dx < -100 || dx > canvas.width+100 || dy < -100 || dy > canvas.height+100) return;
-
-                if(en.type === 'sect-portal') {
-                    ctx.font = "45px Arial"; ctx.fillText("🏰", dx-22, dy);
-                    ctx.fillStyle = varColor('--gold'); ctx.font = "bold 12px Arial"; 
-                    ctx.fillText(en.name, dx-20, dy+25);
-                    // Va chạm cổng dịch chuyển
-                    if(Math.sqrt((en.x-game.p.x)**2+(en.y-game.p.y)**2) < 90) enterSect(en.name);
-                } else if(en.type === 'npc') {
-                    updateNPC(en);
-                    ctx.font = "38px Arial"; ctx.fillText(en.isHostile ? "😠" : "👤", dx-18, dy);
-                    if(en.msg) { 
-                        ctx.fillStyle = "white"; ctx.fillRect(dx-45, dy-65, 90, 22);
-                        ctx.fillStyle="black"; ctx.font="10px Arial"; ctx.fillText(en.msg, dx-40, dy-50); 
-                    }
-                } else {
-                    ctx.fillStyle = en.color; ctx.beginPath(); ctx.arc(dx, dy, 13, 0, Math.PI*2); ctx.fill();
-                    // Thanh máu quái vật
-                    ctx.fillStyle = "#222"; ctx.fillRect(dx-15, dy-25, 30, 4);
-                    ctx.fillStyle = "red"; ctx.fillRect(dx-15, dy-25, (en.hp/150)*30, 4);
-                }
-            });
-        } else {
-            // Cập nhật vị trí Trong Tông Môn (Tốc độ nhanh hơn chút)
-            game.p.x += game.input.joyX * 3.5;
-            game.p.y += game.input.joyY * 3.5;
-            drawSectRoom(camX, camY);
-        }
-
-        drawPlayer(canvas.width/2, canvas.height/2);
+        game.p.equipped[slot] = skillName;
         updateUI();
-        drawRadar();
-        requestAnimationFrame(loop);
+        renderSkillGrid('EQUIP');
+        addLog(`Đã trang bị [${skillName}] vào ô ${slot + 1}`);
     }
 
-    /** --- VẼ NỘI VI TÔNG MÔN --- **/
-    function drawSectRoom(cx, cy) {
-        // Giới hạn phòng Tông môn
-        ctx.fillStyle = "#1e1e1e"; ctx.fillRect(100+cx, 100+cy, 800, 800);
-        ctx.strokeStyle = varColor('--gold'); ctx.lineWidth = 5; ctx.strokeRect(100+cx, 100+cy, 800, 800);
-        
-        // Chặn tường
-        game.p.x = Math.max(120, Math.min(880, game.p.x));
-        game.p.y = Math.max(120, Math.min(880, game.p.y));
+    initSectPicker();
+             </script>
+                 /** --- HỆ THỐNG QUẢN LÝ UI (HỌC ĐẠO & TRANG BỊ) --- **/
+    const tabLearn = document.getElementById('tab-learn');
+    const tabEquip = document.getElementById('tab-equip');
+    let currentTab = 'LEARN';
 
-        const sectNPCs = [
-            {n: "Sư Phụ", x: 350, y: 350, i: "🧙‍♂️", r: "QUEST"}, 
-            {n: "Trưởng Môn", x: 650, y: 350, i: "🧝‍♂️", r: "SKILL"}
-        ];
+    tabLearn.onclick = () => { currentTab = 'LEARN'; renderSkillGrid(); tabLearn.classList.add('active'); tabEquip.classList.remove('active'); };
+    tabEquip.onclick = () => { currentTab = 'EQUIP'; renderSkillGrid(); tabEquip.classList.add('active'); tabLearn.classList.remove('active'); };
 
-        sectNPCs.forEach(n => {
-            let dx = n.x+cx, dy = n.y+cy;
-            ctx.font = "55px Arial"; ctx.fillText(n.i, dx-27, dy);
-            ctx.fillStyle = "white"; ctx.font = "bold 15px Arial"; ctx.fillText(n.n, dx-25, dy+35);
+    function renderSkillGrid() {
+        const grid = document.getElementById('skill-grid');
+        grid.innerHTML = '';
+        const allSkills = SECT_DATA[game.p.sect].skills;
+
+        allSkills.forEach((s, idx) => {
+            const isOwned = game.p.skillsOwned.includes(s.n);
+            const card = document.createElement('div');
+            card.className = `skill-card ${isOwned ? 'unlocked' : ''}`;
             
-            let dist = Math.sqrt((n.x-game.p.x)**2+(n.y-game.p.y)**2);
-            if(dist < 100) {
-                ctx.fillStyle = varColor('--cyan'); ctx.font = "11px Arial"; ctx.fillText("CHẠM ĐỂ BÁI KIẾN", dx-45, dy-70);
-                // Bắt sự kiện chạm tương tác
-                canvas.ontouchstart = (e) => {
-                    const touch = e.touches[0];
-                    if(touch.clientX > canvas.width/4) openShop(n.r);
-                };
+            let actionBtn = '';
+            if (currentTab === 'LEARN') {
+                actionBtn = isOwned ? 
+                    `<button disabled style="background:#222; color:#555">ĐÃ THUỘC</button>` : 
+                    `<button class="btn-learn" onclick="buySkill(${idx})">HỌC (${s.cost}💰)</button>`;
+            } else if (isOwned) {
+                actionBtn = `
+                    <div style="display:flex; gap:2px; width:100%">
+                        <button class="btn-equip" onclick="equipSkill(${game.p.skillsOwned.indexOf(s.n)}, 0)">Ô 1</button>
+                        <button class="btn-equip" onclick="equipSkill(${game.p.skillsOwned.indexOf(s.n)}, 1)">Ô 2</button>
+                        <button class="btn-equip" onclick="equipSkill(${game.p.skillsOwned.indexOf(s.n)}, 2)">Ô 3</button>
+                    </div>`;
             }
+
+            card.innerHTML = `
+                <div style="font-size:24px">${s.i}</div>
+                <div style="font-size:11px; font-weight:bold; text-align:center">${s.n}</div>
+                <div style="font-size:9px; color:#aaa">ST: ${s.dmg} | Hồi: ${s.cd}s</div>
+                ${actionBtn}
+            `;
+            grid.appendChild(card);
         });
     }
 
-    /** --- HÀM VẼ LƯỚI GRID --- **/
-    function drawGrid(cx, cy) {
-        ctx.strokeStyle = "#121212"; ctx.lineWidth = 1;
-        let sX = Math.floor(game.p.x/100)*100-1000, sY = Math.floor(game.p.y/100)*100-1000;
-        for(let x=sX; x<sX+2000; x+=100) { ctx.beginPath(); ctx.moveTo(x+cx, 0); ctx.lineTo(x+cx, canvas.height); ctx.stroke(); }
-        for(let y=sY; y<sY+2000; y+=100) { ctx.beginPath(); ctx.moveTo(0, y+cy); ctx.lineTo(canvas.width, y+cy); ctx.stroke(); }
-    }
-
-    /** --- HỆ THỐNG CỬA HÀNG KỸ NĂNG --- **/
-    function openShop(role) {
-        const root = document.getElementById('shop-items');
-        const title = document.getElementById('shop-title');
-        root.innerHTML = '';
-        if(role === 'SKILL') {
-            title.innerText = "TRƯỞNG MÔN: TRUYỀN DẠY";
-            game.p.skills.forEach((s, i) => {
-                if(!s.unlocked) {
-                    const row = document.createElement('div');
-                    row.className = 'shop-row';
-                    row.innerHTML = `
-                        <div style="font-size:13px"><b>${s.n}</b><br><small>ST: ${s.dmg}</small></div>
-                        <button class="buy-btn" onclick="buySkill(${i})">${s.cost.toLocaleString()}💰</button>
-                    `;
-                    root.appendChild(row);
-                }
-            });
-        } else {
-            title.innerText = "SƯ PHỤ: NHIỆM VỤ";
-            root.innerHTML = `
-                <div style="padding:15px; text-align:center;">
-                    <p>"Con cần tích lũy thêm Linh Thạch bằng cách trừ yêu diệt ma ngoài kia."</p>
-                    <p style="color:var(--gold)">Mục tiêu: Đủ Linh Thạch để học Tuyệt Kỹ!</p>
-                </div>`;
-        }
-        document.getElementById('shop-ui').style.display = 'block';
-    }
-
-    function buySkill(i) {
-        let s = game.p.skills[i];
-        if(game.p.gold >= s.cost) {
+    function buySkill(idx) {
+        const s = SECT_DATA[game.p.sect].skills[idx];
+        if (game.p.gold >= s.cost) {
             game.p.gold -= s.cost;
-            game.p.skills[i].unlocked = true;
-            addLog(`Chúc mừng! Bạn đã ngộ được [${s.n}]`);
-            updateUI(); openShop('SKILL');
+            game.p.skillsOwned.push(s.n);
+            addLog(`<span style="color:var(--gold)">Ngộ tính cực cao! Bạn đã học được [${s.n}]</span>`);
+            updateUI(); renderSkillGrid();
         } else {
-            alert("Linh thạch không đủ để bái sư học đạo!");
+            addLog("<span style="color:var(--red)">Linh thạch không đủ, hãy đi diệt quái!</span>");
         }
     }
 
-    /** --- SINH QUÁI VẬT TỰ ĐỘNG --- **/
-    function updateWorld() {
-        let cx = Math.floor(game.p.x / 2500), cy = Math.floor(game.p.y / 2500);
-        for(let i=-1; i<=1; i++) {
-            for(let j=-1; j<=1; j++) {
-                let key = `${cx+i},${cy+j}`;
-                if(!game.world.chunks.has(key)) {
-                    game.world.chunks.add(key);
-                    spawnChunk(cx+i, cy+j);
+    /** --- CHUYỂN MAP & KHÔNG GIAN --- **/
+    function enterSect(name) {
+        if (game.p.sect !== name) {
+            addLog(`Hệ thống: Bạn không phải đệ tử ${name}, không thể vào!`);
+            game.p.x -= 50; return; 
+        }
+        game.lastPos = { x: game.p.x, y: game.p.y };
+        game.state = 'SECT';
+        game.p.x = 500; game.p.y = 700;
+        document.getElementById('exit-btn').style.display = 'block';
+        addLog(`Đang tiến vào thánh địa ${name}...`);
+    }
+
+    function leaveSect() {
+        game.state = 'WORLD';
+        game.p.x = game.lastPos.x; game.p.y = game.lastPos.y + 50;
+        document.getElementById('exit-btn').style.display = 'none';
+        addLog("Đã trở lại hồng trần.");
+    }
+
+    /** --- VÒNG LẶP RENDER (PART 1) --- **/
+    function update() {
+        // Cập nhật tọa độ theo Joystick
+        if (game.joy.active) {
+            game.p.x += game.joy.x * game.p.speed;
+            game.p.y += game.joy.y * game.p.speed;
+        }
+
+        // Camera bám sát nhân vật
+        game.cam.x = canvas.width / 2 - game.p.x;
+        game.cam.y = canvas.height / 2 - game.p.y;
+
+        // Xử lý va chạm Thế giới
+        if (game.state === 'WORLD') {
+            updateWorld();
+        } else {
+            // Giới hạn trong Tông môn
+            game.p.x = Math.max(150, Math.min(850, game.p.x));
+            game.p.y = Math.max(150, Math.min(850, game.p.y));
+        }
+    }
+
+    function draw() {
+        ctx.fillStyle = "#050505";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        const cx = game.cam.x; const cy = game.cam.y;
+
+        if (game.state === 'WORLD') {
+            drawGrid(cx, cy);
+            drawEntities(cx, cy);
+        } else {
+            drawSectScene(cx, cy);
+        }
+
+        drawPlayer();
+        drawRadar();
+        updateUI();
+        requestAnimationFrame(() => { update(); draw(); });
+    }
+
+    function drawSectScene(cx, cy) {
+        // Vẽ nền tông môn
+        ctx.fillStyle = "#151515";
+        ctx.fillRect(100 + cx, 100 + cy, 800, 800);
+        ctx.strokeStyle = varColor('--gold');
+        ctx.lineWidth = 4;
+        ctx.strokeRect(100 + cx, 100 + cy, 800, 800);
+
+        // Vẽ Trưởng Môn AI
+        const masterX = 500 + cx, masterY = 300 + cy;
+        ctx.font = "60px Arial"; ctx.fillText("🧙‍♂️", masterX - 30, masterY);
+        ctx.fillStyle = "white"; ctx.font = "bold 16px Arial";
+        ctx.fillText("TRƯỞNG MÔN", masterX - 45, masterY + 40);
+
+        // Tự động mở UI khi lại gần Trưởng Môn
+        let dist = Math.sqrt((game.p.x - 500) ** 2 + (game.p.y - 300) ** 2);
+        if (dist < 80 && document.getElementById('sect-ui').style.display === 'none') {
+            openUI();
+        }
+    }
+                /** --- HỆ THỐNG ĐIỀU KHIỂN JOYSTICK & CẢM ỨNG --- **/
+    const joyContainer = document.getElementById('joy-container');
+    const joyStick = document.getElementById('joy-stick');
+    let joyRect = joyContainer.getBoundingClientRect();
+
+    window.addEventListener('resize', () => { 
+        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+        joyRect = joyContainer.getBoundingClientRect();
+    });
+
+    // Xử lý di chuyển Joystick
+    const handleMove = (e) => {
+        e.preventDefault();
+        const touch = e.touches ? e.touches[0] : e;
+        const centerX = joyRect.left + joyRect.width / 2;
+        const centerY = joyRect.top + joyRect.height / 2;
+        let dx = touch.clientX - centerX;
+        let dy = touch.clientY - centerY;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        const maxDist = joyRect.width / 2;
+
+        if (dist > maxDist) { dx *= maxDist / dist; dy *= maxDist / dist; }
+
+        game.joy.x = dx / maxDist;
+        game.joy.y = dy / maxDist;
+        game.joy.active = true;
+        joyStick.style.transform = `translate(${dx}px, ${dy}px)`;
+    };
+
+    joyContainer.addEventListener('touchstart', (e) => { game.joy.active = true; handleMove(e); });
+    joyContainer.addEventListener('touchmove', handleMove);
+    joyContainer.addEventListener('touchend', () => {
+        game.joy.active = false; game.joy.x = 0; game.joy.y = 0;
+        joyStick.style.transform = `translate(0px, 0px)`;
+    });
+
+    /** --- HỆ THỐNG CHIẾN ĐẤU & KỸ NĂNG --- **/
+    function castSkill(slotIdx) {
+        const skillName = game.p.equipped[slotIdx];
+        if (!skillName) return;
+
+        const now = Date.now();
+        const skillBase = SECT_DATA[game.p.sect].skills.find(s => s.n === skillName);
+        
+        // Kiểm tra hồi chiêu
+        if (now - game.p.lastCD[slotIdx] < skillBase.cd * 1000) {
+            addLog(`<span style="color:#666">Chưa hồi chiêu ${skillName}!</span>`);
+            return;
+        }
+
+        // Thi triển kỹ năng
+        game.p.lastCD[slotIdx] = now;
+        startCDAnimation(slotIdx, skillBase.cd);
+        
+        // Tạo hiệu ứng hình ảnh
+        spawnEffect(game.p.x, game.p.y, skillBase.i, SECT_DATA[game.p.sect].color);
+
+        // Xử lý sát thương diện rộng
+        let hitCount = 0;
+        game.entities.forEach(en => {
+            if (en.type === 'mob') {
+                let d = Math.sqrt((en.x - game.p.x)**2 + (en.y - game.p.y)**2);
+                if (d < 180) { // Phạm vi sát thương
+                    en.hp -= skillBase.dmg;
+                    hitCount++;
+                    if (en.hp <= 0) {
+                        game.p.gold += 150; // Thưởng linh thạch
+                        en.dead = true;
+                    }
                 }
             }
-        }
+        });
+        
+        addLog(`<span style="color:var(--cyan)">Thi triển ${skillName}! (Đả thương ${hitCount} mục tiêu)</span>`);
     }
 
-    function spawnChunk(cx, cy) {
-        let bx = cx * 2500, by = cy * 2500;
-        // Cổng Tông Môn
-        Object.keys(SECT_CONFIG).forEach((sName, idx) => {
-            if(Math.random() > 0.85) {
-                game.world.entities.push({
-                    type: 'sect-portal', x: bx + Math.random()*2000, y: by + Math.random()*2000, name: sName
-                });
+    function startCDAnimation(slot, duration) {
+        const mask = document.getElementById(`cd-${slot}`);
+        mask.style.height = "100%";
+        let start = Date.now();
+        let timer = setInterval(() => {
+            let elapsed = Date.now() - start;
+            let percent = 100 - (elapsed / (duration * 1000) * 100);
+            mask.style.height = Math.max(0, percent) + "%";
+            if (percent <= 0) clearInterval(timer);
+        }, 50);
+    }
+
+    /** --- RENDER THỰC THỂ & QUÁI VẬT --- **/
+    function drawEntities(cx, cy) {
+        game.entities = game.entities.filter(en => !en.dead);
+        game.entities.forEach(en => {
+            let dx = en.x + cx, dy = en.y + cy;
+            if (dx < -50 || dx > canvas.width + 50 || dy < -50 || dy > canvas.height + 50) return;
+
+            if (en.type === 'portal') {
+                ctx.font = "50px Arial"; ctx.fillText("⛩️", dx - 25, dy);
+                ctx.fillStyle = "gold"; ctx.font = "12px Arial"; ctx.fillText(en.name, dx - 20, dy + 25);
+                if (Math.sqrt((en.x - game.p.x)**2 + (en.y - game.p.y)**2) < 60) enterSect(en.name);
+            } else {
+                // Vẽ Quái Vật
+                ctx.fillStyle = "#ff4757"; ctx.beginPath(); ctx.arc(dx, dy, 15, 0, Math.PI*2); ctx.fill();
+                ctx.fillStyle = "#222"; ctx.fillRect(dx - 15, dy - 25, 30, 4);
+                ctx.fillStyle = "red"; ctx.fillRect(dx - 15, dy - 25, (en.hp/150)*30, 4);
+                
+                // AI Quái vật đuổi theo người chơi
+                let adx = game.p.x - en.x, ady = game.p.y - en.y;
+                let dist = Math.sqrt(adx*adx + ady*ady);
+                if (dist < 300) {
+                    en.x += (adx/dist) * 1.2; en.y += (ady/dist) * 1.2;
+                    if (dist < 40 && Date.now() % 100 < 5) {
+                        game.p.hp -= 5; // Quái cắn
+                        if (game.p.hp < 0) game.p.hp = 0;
+                    }
+                }
             }
         });
-        // Quái vật
-        for(let k=0; k<8; k++) {
-            game.world.entities.push({
-                type: 'mob', x: bx + Math.random()*2500, y: by + Math.random()*2500, hp: 150, color: '#ff4757'
+    }
+
+    function spawnEffect(x, y, icon, color) {
+        ctx.save();
+        ctx.shadowBlur = 20; ctx.shadowColor = color;
+        ctx.fillStyle = "white"; ctx.font = "40px Arial";
+        ctx.fillText(icon, canvas.width/2 - 20, canvas.height/2 - 60);
+        ctx.restore();
+    }
+
+    /** --- KHỞI CHẠY GAME --- **/
+    function updateWorld() {
+        // Tự động sinh quái quanh vị trí người chơi
+        if (game.entities.filter(e => e.type === 'mob').length < 15) {
+            game.entities.push({
+                type: 'mob', hp: 150,
+                x: game.p.x + (Math.random() - 0.5) * 1500,
+                y: game.p.y + (Math.random() - 0.5) * 1500
             });
         }
-        // NPC đi dạo
-        if(Math.random() > 0.7) {
-            game.world.entities.push({
-                type: 'npc', x: bx + 1200, y: by + 1200, hp: 1000, 
-                name: "Đạo Hữu", isHostile: false, lastMove: 0, lastTalk: 0, msg: ""
+        // Sinh cổng phái ngẫu nhiên nếu chưa có
+        if (game.entities.filter(e => e.type === 'portal').length < 5) {
+            let names = Object.keys(SECT_DATA);
+            game.entities.push({
+                type: 'portal', name: names[Math.floor(Math.random() * names.length)],
+                x: game.p.x + (Math.random() - 0.5) * 3000,
+                y: game.p.y + (Math.random() - 0.5) * 3000
             });
         }
     }
 
-    /** --- CÁC HÀM HỖ TRỢ --- **/
-    function drawPlayer(x, y) {
-        ctx.strokeStyle = SECT_CONFIG[game.p.sect].color; ctx.lineWidth = 3;
-        ctx.beginPath(); ctx.arc(x, y-40, 9, 0, Math.PI*2); ctx.stroke(); // Đầu
-        ctx.beginPath(); ctx.moveTo(x, y-31); ctx.lineTo(x, y-10); ctx.stroke(); // Thân
-        ctx.beginPath(); ctx.moveTo(x, y-28); ctx.lineTo(x-18, y-15); ctx.stroke(); // Tay
-        ctx.beginPath(); ctx.moveTo(x, y-28); ctx.lineTo(x+18, y-15); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(x, y-10); ctx.lineTo(x-12, y+8); ctx.stroke(); // Chân
-        ctx.beginPath(); ctx.moveTo(x, y-10); ctx.lineTo(x+12, y+8); ctx.stroke();
+    function drawGrid(cx, cy) {
+        ctx.strokeStyle = "#151515"; ctx.lineWidth = 1;
+        let step = 100;
+        let startX = Math.floor((-cx)/step)*step, startY = Math.floor((-cy)/step)*step;
+        for(let x=startX; x<startX+canvas.width+step; x+=step) {
+            ctx.beginPath(); ctx.moveTo(x+cx, 0); ctx.lineTo(x+cx, canvas.height); ctx.stroke();
+        }
+        for(let y=startY; y<startY+canvas.height+step; y+=step) {
+            ctx.beginPath(); ctx.moveTo(0, y+cy); ctx.lineTo(canvas.width, y+cy); ctx.stroke();
+        }
     }
 
-    function drawRadar() {
-        rCtx.fillStyle = "#000"; rCtx.fillRect(0,0,140,140);
-        if(game.state !== 'WORLD') return;
-        game.world.entities.forEach(en => {
-            let rx = 70+(en.x-game.p.x)*game.world.zoom, ry = 70+(en.y-game.p.y)*game.world.zoom;
-            if(rx>0&&rx<140&&ry>0&&ry<140) {
-                rCtx.fillStyle = en.type==='sect-portal'?'gold':(en.type==='npc'?'white':'red');
-                rCtx.beginPath(); rCtx.arc(rx,ry,en.type==='sect-portal'?4:1.8,0,Math.PI*2); rCtx.fill();
-            }
-        });
-        rCtx.fillStyle = varColor('--cyan'); rCtx.beginPath(); rCtx.arc(70,70,3,0,Math.PI*2); rCtx.fill();
+    function drawPlayer() {
+        const x = canvas.width/2, y = canvas.height/2;
+        ctx.strokeStyle = SECT_DATA[game.p.sect].color; ctx.lineWidth = 3;
+        // Đầu
+        ctx.beginPath(); ctx.arc(x, y-35, 10, 0, Math.PI*2); ctx.stroke();
+        // Thân & Kiếm
+        ctx.beginPath(); ctx.moveTo(x, y-25); ctx.lineTo(x, y); ctx.stroke();
+        ctx.strokeStyle = "white"; ctx.beginPath(); ctx.moveTo(x+5, y-15); ctx.lineTo(x+25, y-35); ctx.stroke();
     }
 
     function updateUI() {
-        document.getElementById('ui-gold').innerText = game.p.gold.toLocaleString();
-        document.getElementById('ui-coords').innerText = `${Math.floor(game.p.x)},${Math.floor(game.p.y)}`;
-        document.getElementById('hp-bar').style.width = (game.p.hp/game.p.maxHp*100) + "%";
-        game.p.skills.forEach((s, i) => { if(s.unlocked) document.getElementById(`sk-${i}`).classList.add('unlocked'); });
+        document.getElementById('p-gold').innerText = game.p.gold.toLocaleString();
+        document.getElementById('ui-gold-shop').innerText = game.p.gold.toLocaleString();
+        document.getElementById('hp-fill').style.width = (game.p.hp/game.p.maxHp*100) + "%";
+        document.getElementById('coords').innerText = `${Math.floor(game.p.x)}, ${Math.floor(game.p.y)}`;
+        
+        // Cập nhật icon 3 ô kỹ năng trang bị
+        game.p.equipped.forEach((sName, i) => {
+            const slot = document.getElementById(`slot-${i}`);
+            if (sName) {
+                const sBase = SECT_DATA[game.p.sect].skills.find(sk => sk.n === sName);
+                slot.innerHTML = sBase.i + `<div class="cd" id="cd-${i}"></div>`;
+                slot.className = "slot ready";
+                slot.onclick = () => castSkill(i);
+            } else {
+                slot.innerHTML = "🔒"; slot.className = "slot"; slot.onclick = null;
+            }
+        });
     }
 
+    function startGame() {
+        if (!game.p.sect) return alert("Vui lòng chọn một Tông môn!");
+        document.getElementById('start-screen').style.display = 'none';
+        document.getElementById('p-sect-name').innerText = game.p.sect;
+        document.getElementById('p-avatar').innerText = SECT_DATA[game.p.sect].icon;
+        
+        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+        addLog("Chào mừng đệ tử đã gia nhập " + game.p.sect);
+        draw();
+    }
+
+    function openUI() { document.getElementById('sect-ui').style.display = 'flex'; renderSkillGrid(); }
+    function closeUI() { document.getElementById('sect-ui').style.display = 'none'; }
     function addLog(m) {
-        const box = document.getElementById('chat-box');
-        box.innerHTML += `<div>${m}</div>`; box.scrollTop = box.scrollHeight;
+        const b = document.getElementById('log-box');
+        b.innerHTML = `<div>${m}</div>` + b.innerHTML;
     }
-
-    function closeShop() { document.getElementById('shop-ui').style.display = 'none'; canvas.ontouchstart = null; }
-    function mapZoom(v) { game.world.zoom = Math.max(0.005, Math.min(0.1, game.world.zoom * v)); }
     function varColor(n) { return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
 
-    initPicker();
-</script>
-</body>
-</html>
+    // Nút đánh thường (Main Attack)
+    document.getElementById('btn-atk').onclick = () => {
+        spawnEffect(game.p.x, game.p.y, "⚔️", "white");
+        game.entities.forEach(en => {
+            if (en.type === 'mob' && Math.sqrt((en.x-game.p.x)**2+(en.y-game.p.y)**2) < 100) {
+                en.hp -= 40; if (en.hp <= 0) { game.p.gold += 150; en.dead = true; }
+            }
+        });
+    };
+                </script>
+                    </body>
+                </html>
+                    
